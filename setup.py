@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='hashdb2',
-      version='0.1',
+      version='0.2',
       description='HashDb2 provides a simple method for executing commands based on matched files',
       url='https://github.com/WHenderson/HashDb',
       author='Will Henderson',
