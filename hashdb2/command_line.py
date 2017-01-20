@@ -10,8 +10,15 @@ Usage:
 from docopt import docopt
 
 import pkg_resources  # part of setuptools
-version = pkg_resources.require("MyProject")[0].version
+version = pkg_resources.require("hashdb2")[0].version
 
-def main():
+import sys
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    else:
+        argv = [__file__] + argv
+
     global __doc__
-    arguments = docopt(__doc__, version='HashDb2 ' + version)
+    arguments = docopt(__doc__, argv, version='HashDb2 ' + version)
