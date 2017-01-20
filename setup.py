@@ -1,10 +1,13 @@
 from setuptools import setup
 
+def readme():
+    with open('README.rst') as f:
+        return f.read()
 setup(
     name='hashdb2',
-    version='0.2',
+    version='0.3',
     description='HashDb2 provides a simple method for executing commands based on matched files',
-    #long_description='',
+    long_description=readme(),
     classifiers=[
         'Development Status :: 1 - Planning0',
         'Programming Language :: Python :: 3 :: Only',
