@@ -32,5 +32,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'docopt>=0.6.2'
-    ]
+    ],
+    entry_points = {
+        'console_scripts': ['hashdb2=hashdb2.command_line:main'],
+    }
 )
