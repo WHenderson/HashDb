@@ -9,6 +9,6 @@ python:
   - "3.6"
 cache: pip
 install:
-  - pip install
+  - pip install hashdb2
 script:
   - nosetests
