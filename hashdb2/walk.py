@@ -11,7 +11,7 @@ def walk(top, topdown=True, onerror=None, followlinks=False):
         filename = basename(top)
 
         try:
-            scandir_it = scandir(top)
+            scandir_it = scandir(dirpath)
         except OSError as error:
             onerror(error)
             return
