@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from hashdb2.command_line import main
 from docopt import DocoptExit
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stdout
 from io import StringIO
 
 class TestCommand(TestCase):
