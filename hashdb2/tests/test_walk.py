@@ -11,7 +11,6 @@ def deepEqual(lhs, rhs):
     if (isinstance(lhs, list) and isinstance(rhs, list)) or (isinstance(lhs, tuple) and isinstance(rhs, tuple)):
         l = len(lhs)
         if len(rhs) != l:
-            print('(a) %r != %r' % (lhs, rhs))
             return False
 
         for i in range(l):
@@ -20,7 +19,6 @@ def deepEqual(lhs, rhs):
 
         return True
 
-    print('(b) %r != %r' % (lhs, rhs))
     return False
 
 class TestWalk(TestCase):
@@ -50,29 +48,26 @@ class TestWalk(TestCase):
             topDown.sort()
             bottomUp.sort()
 
-            print(topDown)
             self.assertTrue(deepEqual(topDown, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
-                ('b', [], ['b\\y.txt']),
-                ('c', ['c\\d'], []),
-                ('c\\d', [], []),
-                ('e', ['e\\f'], []),
-                ('e\\f', [], ['e\\f\\z.txt'])
+                ('b', [], [os.path.join('b', 'y.txt')]),
+                ('c', [os.path.join('c', 'd')], []),
+                (os.path.join('c', 'd'), [], []),
+                ('e', [os.path.join('e', 'f')], []),
+                (os.path.join('e', 'f'), [], [os.path.join('e', 'f', 'z.txt')])
             ]))
 
-            print(bottomUp)
             self.assertTrue(deepEqual(bottomUp, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
-                ('b', [], ['b\\y.txt']),
-                ('c', ['c\\d'], []),
-                ('c\\d', [], []),
-                ('e', ['e\\f'], []),
-                ('e\\f', [], ['e\\f\\z.txt'])
+                ('b', [], [os.path.join('b', 'y.txt')]),
+                ('c', [os.path.join('c', 'd')], []),
+                (os.path.join('c', 'd'), [], []),
+                ('e', [os.path.join('e', 'f')], []),
+                (os.path.join('e', 'f'), [], [os.path.join('e', 'f', 'z.txt')])
             ]))
 
-            print(single)
             self.assertTrue(deepEqual(single, [
                 ('.', [], ['x.txt'])
             ]))
