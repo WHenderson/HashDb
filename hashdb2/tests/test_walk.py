@@ -54,3 +54,13 @@ class TestWalk(TestCase):
             self.assertEqual(single, [
                 ('.', [], ['x.txt'])
             ])
+
+    def test_fail(self):
+        def onerror(err):
+            raise err
+
+        with self.assertRaises(OSError):
+            next(walk(os.path.join('does-not-exist', 'does-not-exist-either'), onerror=onerror))
+
+        with self.assertRaises(OSError):
+            next(walk('does-not-exist', onerror=onerror))
