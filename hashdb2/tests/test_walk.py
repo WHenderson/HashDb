@@ -21,8 +21,8 @@ def deepEqual(lhs, rhs):
 
     return False
 
-class TestHello(TestCase):
-    def test_walk_folder(self):
+class TestWalk(TestCase):
+    def test_walk(self):
         with TemporaryDirectory() as root:
             os.mkdir(os.path.join(root, 'a'))
             os.mkdir(os.path.join(root, 'b'))
@@ -48,6 +48,7 @@ class TestHello(TestCase):
             topDown.sort()
             bottomUp.sort()
 
+            print(topDown)
             self.assertTrue(deepEqual(topDown, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
@@ -57,6 +58,8 @@ class TestHello(TestCase):
                 ('e', ['e\\f'], []),
                 ('e\\f', [], ['e\\f\\z.txt'])
             ]))
+
+            print(bottomUp)
             self.assertTrue(deepEqual(bottomUp, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
@@ -66,6 +69,8 @@ class TestHello(TestCase):
                 ('e', ['e\\f'], []),
                 ('e\\f', [], ['e\\f\\z.txt'])
             ]))
+
+            print(single)
             self.assertTrue(deepEqual(single, [
                 ('.', [], ['x.txt'])
             ]))
