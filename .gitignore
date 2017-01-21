@@ -1,3 +1,5 @@
 /.idea/
 /hashdb2.egg-info/
 /dist/
+/.coverage
+/cover/
