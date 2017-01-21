@@ -4,23 +4,6 @@ import os.path
 
 from hashdb2.walk import walk
 
-def deepEqual(lhs, rhs):
-    if lhs == rhs:
-        return True
-
-    if (isinstance(lhs, list) and isinstance(rhs, list)) or (isinstance(lhs, tuple) and isinstance(rhs, tuple)):
-        l = len(lhs)
-        if len(rhs) != l:
-            return False
-
-        for i in range(l):
-            if not deepEqual(lhs[i], rhs[i]):
-                return False
-
-        return True
-
-    return False
-
 class TestWalk(TestCase):
     def test_walk(self):
         with TemporaryDirectory() as root:
@@ -48,7 +31,7 @@ class TestWalk(TestCase):
             topDown.sort()
             bottomUp.sort()
 
-            self.assertTrue(deepEqual(topDown, [
+            self.assertEqual(topDown, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
                 ('b', [], [os.path.join('b', 'y.txt')]),
@@ -56,9 +39,9 @@ class TestWalk(TestCase):
                 (os.path.join('c', 'd'), [], []),
                 ('e', [os.path.join('e', 'f')], []),
                 (os.path.join('e', 'f'), [], [os.path.join('e', 'f', 'z.txt')])
-            ]))
+            ])
 
-            self.assertTrue(deepEqual(bottomUp, [
+            self.assertEqual(bottomUp, [
                 ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
                 ('a', [], []),
                 ('b', [], [os.path.join('b', 'y.txt')]),
@@ -66,8 +49,8 @@ class TestWalk(TestCase):
                 (os.path.join('c', 'd'), [], []),
                 ('e', [os.path.join('e', 'f')], []),
                 (os.path.join('e', 'f'), [], [os.path.join('e', 'f', 'z.txt')])
-            ]))
+            ])
 
-            self.assertTrue(deepEqual(single, [
+            self.assertEqual(single, [
                 ('.', [], ['x.txt'])
-            ]))
+            ])
