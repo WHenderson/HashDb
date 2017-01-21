@@ -43,19 +43,29 @@ class TestHello(TestCase):
 
             topDown = [(os.path.relpath(top, root), relativePaths(dirs), relativePaths(nondirs)) for top, dirs, nondirs in walk(root)]
             bottomUp = [(os.path.relpath(top, root), relativePaths(dirs), relativePaths(nondirs)) for top, dirs, nondirs in walk(root, False)]
+            single = [(os.path.relpath(top, root), relativePaths(dirs), relativePaths(nondirs)) for top, dirs, nondirs in walk(os.path.join(root, 'x.txt'))]
 
             topDown.sort()
             bottomUp.sort()
 
-            self.assertTrue(deepEqual(topDown,
-                                      [('.', ['a', 'b', 'c', 'e'], ['x.txt']), ('a', [], []), ('b', [], ['b\\y.txt']),
-                                       ('c', ['c\\d'], []), ('c\\d', [], []), ('e', ['e\\f'], []),
-                                       ('e\\f', [], ['e\\f\\z.txt'])]))
-            self.assertTrue(deepEqual(bottomUp,
-                                      [('.', ['a', 'b', 'c', 'e'], ['x.txt']), ('a', [], []), ('b', [], ['b\\y.txt']),
-                                       ('c', ['c\\d'], []), ('c\\d', [], []), ('e', ['e\\f'], []),
-                                       ('e\\f', [], ['e\\f\\z.txt'])]))
-
-
-            single = [(os.path.relpath(top, root), relativePaths(dirs), relativePaths(nondirs)) for top, dirs, nondirs in walk(os.path.join(root, 'x.txt'))]
-            self.assertTrue(deepEqual(single, [('.', [], ['x.txt'])]))
+            self.assertTrue(deepEqual(topDown, [
+                ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
+                ('a', [], []),
+                ('b', [], ['b\\y.txt']),
+                ('c', ['c\\d'], []),
+                ('c\\d', [], []),
+                ('e', ['e\\f'], []),
+                ('e\\f', [], ['e\\f\\z.txt'])
+            ]))
+            self.assertTrue(deepEqual(bottomUp, [
+                ('.', ['a', 'b', 'c', 'e'], ['x.txt']),
+                ('a', [], []),
+                ('b', [], ['b\\y.txt']),
+                ('c', ['c\\d'], []),
+                ('c\\d', [], []),
+                ('e', ['e\\f'], []),
+                ('e\\f', [], ['e\\f\\z.txt'])
+            ]))
+            self.assertTrue(deepEqual(single, [
+                ('.', [], ['x.txt'])
+            ]))
