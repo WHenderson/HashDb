@@ -61,8 +61,8 @@ class TestWalk(TestCase):
 
         self.assertEqual(len(list(walk(os.path.join('.', 'does-not-exist')))), 0)
         with self.assertRaises(OSError):
-            next(walk(os.path.join('.', 'does-not-exist'), onerror=onerror))
+            self.assertEqual(len(list(walk(os.path.join('.', 'does-not-exist'), onerror=onerror))), 0)
 
         self.assertEqual(len(list(walk('does-not-exist'))), 0)
         with self.assertRaises(OSError):
-            next(walk('does-not-exist', onerror=onerror))
+            self.assertEqual(len(list(walk('does-not-exist', onerror=onerror))), 0)

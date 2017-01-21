@@ -1,8 +1,9 @@
-from os import scandir
+from os import scandir, strerror
 from os.path import join, islink, isdir, dirname, basename
+from errno import ENOENT
 
 def walk(top, topdown=True, onerror=None, followlinks=False):
-    onerror = onerror or (lambda : None)
+    onerror = onerror or (lambda err : None)
 
     if isdir(top):
         yield from _walk(top, topdown, onerror, followlinks)
@@ -21,14 +22,14 @@ def walk(top, topdown=True, onerror=None, followlinks=False):
                 try:
                     entry = next(scandir_it)
                 except StopIteration:
-                    break
+                    raise FileNotFoundError(ENOENT, strerror(ENOENT), filename)
             except OSError as error:
                 onerror(error)
                 return
 
             if entry.name == filename:
                 yield dirpath, [], [entry]
-                break
+                return
 
 def _walk(top, topdown=True, onerror=None, followlinks=False):
     """Like Python 3.5's implementation of os.walk() -- faster than
