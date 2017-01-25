@@ -4,8 +4,16 @@ HashDb2
 Usage:
     hashdb2 -h | --help
     hashdb2 --version
-'''
+    hashdb2 hash [-f|-q|-n] DATABASE -- INPUTS...
 
+Options:
+    -f|--full   Generate complete hash for each file
+    -q|--quick  Generate quick hash for each file
+    -n|--none   Do not generate hashes [default]
+
+    DATABASE    Name of the database to create/update
+    INPUTS      List files/folders to add to DATABASE
+'''
 
 from docopt import docopt
 
@@ -21,4 +29,8 @@ def main(argv=None):
         argv = [__file__] + argv
 
     global __doc__
-    arguments = docopt(__doc__, argv, version='HashDb2 ' + version)
+    arguments = docopt(__doc__, argv[1:], version='HashDb2 ' + version)
+    print(arguments)
+
+if __name__ == '__main__':
+    main()
