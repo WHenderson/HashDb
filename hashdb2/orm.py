@@ -1,8 +1,11 @@
 from peewee import *
 import sqlite3
 
-def create_schema(conn, schemaName='main'):
-    conn = sqlite3.connect(':memory:')
+def create_schema(conn=None, schemaName='main'):
+    if conn is None:
+        conn = sqlite3.connect(':memory:')
+    elif isinstance(conn, str):
+        conn = sqlite3.connect(conn)
 
     sql = '''
     CREATE TABLE IF NOT EXISTS "%(schemaName)s"."Files" (
