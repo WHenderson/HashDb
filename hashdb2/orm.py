@@ -21,3 +21,5 @@ def create_schema(conn=None, schemaName='main'):
     ''' % { 'schemaName': schemaName }
 
     conn.execute(sql)
+
+    return conn
