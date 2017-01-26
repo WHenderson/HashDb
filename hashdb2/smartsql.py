@@ -778,7 +778,33 @@ class UnionQuerySet(object):
 
         return sql, params
 
+def iter_flatten(item_or_items):
+    if isinstance(item_or_items, str):
+        yield item_or_items
+    else:
+        try:
+            for item in item_or_items:
+                yield from iter_flatten(item)
+        except TypeError as ex:
+            yield item_or_items
 
+def AND(*items):
+    lhs = None
+    for rhs in iter_flatten(items):
+        if lhs is None:
+            lhs = rhs
+        else:
+            lhs = lhs & rhs
+    return lhs
+
+def OR(*items):
+    lhs = None
+    for rhs in iter_flatten(items):
+        if lhs is None:
+            lhs = rhs
+        else:
+            lhs = lhs | rhs
+    return lhs
 
 
 ############## alias ###############
