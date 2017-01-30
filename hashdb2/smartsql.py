@@ -791,6 +791,9 @@ def iter_flatten(item_or_items):
 def AND(*items):
     lhs = None
     for rhs in iter_flatten(items):
+        if rhs is None:
+            continue
+
         if lhs is None:
             lhs = rhs
         else:
@@ -800,6 +803,9 @@ def AND(*items):
 def OR(*items):
     lhs = None
     for rhs in iter_flatten(items):
+        if rhs is None:
+            continue
+
         if lhs is None:
             lhs = rhs
         else:

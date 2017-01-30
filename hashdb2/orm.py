@@ -1,25 +1,28 @@
-from peewee import *
-import sqlite3
+from sqlalchemy import create_engine, Table, Column, Integer, Float, String, MetaData, ForeignKey
+#from collections import namedtuple
 
-def create_schema(conn=None, schemaName='main'):
-    if conn is None:
-        conn = sqlite3.connect(':memory:')
-    elif isinstance(conn, str):
-        conn = sqlite3.connect(conn)
+#File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-    sql = '''
-    CREATE TABLE IF NOT EXISTS "%(schemaName)s"."Files" (
-      "path" TEXT NOT NULL PRIMARY KEY,
-      "basename" TEXT NOT NULL,
-      "extension" TEXT NOT NULL,
+def create(filename=':memory:', echo=True):
+    return create_engine('sqlite:///%s' % (filename,), echo=echo)
 
-      "size" INTEGER NOT NULL,
-      "time" REAL NOT NULL,
-      "hash_quick" CHAR(32),
-      "hash_total" CHAR(32)
+def attach(engine, name, filename=''):
+    return engine.execute('ATTACH DATABASE ? AS ?', (filename, name))
+
+def create_schema(engine, schema='main'):
+
+    metadata = MetaData(schema=schema)
+    Files = Table('Files', metadata,
+        Column('path', String, primary_key=True, nullable=False),
+        Column('name', String, nullable=False),
+        Column('extension', String, nullable=False),
+
+        Column('size', Integer, nullable=False),
+        Column('time', Float, nullable=False),
+
+        Column('hash_quick', String(32), nullable=True),
+        Column('hash_total', String(32), nullable=True)
     )
-    ''' % { 'schemaName': schemaName }
+    metadata.create_all(engine)
 
-    conn.execute(sql)
-
-    return conn
+    return engine

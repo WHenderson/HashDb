@@ -1,10 +1,11 @@
 from unittest import TestCase
 
 from hashdb2.command_line import main
+from hashdb2.orm import create
 from tempfile import TemporaryDirectory
 from .generate_files import generate_files
 import os.path
-import sqlite3
+from sqlalchemy import MetaData, Table, func, and_
 
 class TestHash(TestCase):
     def test_none(self):
@@ -16,6 +17,11 @@ class TestHash(TestCase):
 
             main(['hash', '-n', dbPath, '--', os.path.join(inputRoot, 'b', 'y.txt'), os.path.join(inputRoot, 'e')])
 
-            #conn = sqlite3.connect(dbPath)
+            engine = create(dbPath)
+            metadata = MetaData()
+            Files = Table('Files', metadata, autoload=True, autoload_with=engine)
+
+            for file in engine.execute(Files.select()):
+                print(file)
 
 

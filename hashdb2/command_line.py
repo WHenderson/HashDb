@@ -32,5 +32,9 @@ def main(argv=None):
     arguments = docopt(__doc__, argv[1:], version='HashDb2 ' + version)
     print(arguments)
 
+    if arguments['hash']:
+        from .command_hash import command_hash
+        command_hash(arguments)
+
 if __name__ == '__main__':
     main()

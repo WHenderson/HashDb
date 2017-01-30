@@ -2,11 +2,11 @@ from os import scandir, strerror
 from os.path import join, islink, isdir, dirname, basename
 from errno import ENOENT
 
-def walk(top, topdown=True, onerror=None, followlinks=False):
+def walk(top, topdown=True, onerror=None, followlinks=False, skiplinks=False):
     onerror = onerror or (lambda err : None)
 
     if isdir(top):
-        yield from _walk(top, topdown, onerror, followlinks)
+        yield from _walk(top, topdown, onerror, followlinks, skiplinks)
     else:
         dirpath = dirname(top)
         filename = basename(top)
@@ -28,10 +28,21 @@ def walk(top, topdown=True, onerror=None, followlinks=False):
                 return
 
             if entry.name == filename:
-                yield dirpath, [], [entry]
+                if skiplinks:
+                    try:
+                        is_symlink = entry.is_symlink()
+                    except OSError:
+                        is_symlink = False
+
+                    if is_symlink:
+                        yield dirpath, [], []
+                    else:
+                        yield dirpath, [], [entry]
+                else:
+                    yield dirpath, [], [entry]
                 return
 
-def _walk(top, topdown=True, onerror=None, followlinks=False):
+def _walk(top, topdown=True, onerror=None, followlinks=False, skiplinks=False):
     """Like Python 3.5's implementation of os.walk() -- faster than
     the pre-Python 3.5 version as it uses scandir() internally.
     """
@@ -69,7 +80,16 @@ def _walk(top, topdown=True, onerror=None, followlinks=False):
         if is_dir:
             dirs.append(entry)
         else:
-            nondirs.append(entry)
+            if skiplinks:
+                try:
+                    is_symlink = entry.is_symlink()
+                except OSError:
+                    is_symlink = False
+
+                if not is_symlink:
+                    nondirs.append(entry)
+            else:
+                nondirs.append(entry)
 
         if not topdown and is_dir:
             # Bottom-up: recurse into sub-directory, but exclude symlinks to
@@ -87,7 +107,7 @@ def _walk(top, topdown=True, onerror=None, followlinks=False):
                 walk_into = not is_symlink
 
             if walk_into:
-                yield from _walk(entry.path, topdown, onerror, followlinks)
+                yield from _walk(entry.path, topdown, onerror, followlinks, skiplinks)
 
     # Yield before recursion if going top down
     if topdown:
@@ -101,7 +121,7 @@ def _walk(top, topdown=True, onerror=None, followlinks=False):
             # the caller can replace the directory entry during the "yield"
             # above.
             if followlinks or not islink(new_path):
-                yield from _walk(new_path, topdown, onerror, followlinks)
+                yield from _walk(new_path, topdown, onerror, followlinks, skiplinks)
     else:
         # Yield after recursion if going bottom up
         yield top, dirs, nondirs

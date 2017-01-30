@@ -26,7 +26,8 @@ setup(
     packages=['hashdb2'],
     zip_safe=False,
     install_requires=[
-        'docopt>=0.6.2'
+        'docopt>=0.6.2',
+        'sqlalchemy>=1.1.5'
     ],
     entry_points = {
         'console_scripts': ['hashdb2=hashdb2.command_line:main'],
