@@ -3,3 +3,4 @@
 /dist/
 /.coverage
 /cover/
+__pycache__
