@@ -3,19 +3,18 @@ from unittest import TestCase
 from hashdb2.command_line import main
 from hashdb2.orm import create
 from tempfile import TemporaryDirectory
-from .generate_files import generate_files
+from .generate_files import generate_files, generate_structure, structures
 import os.path
 from sqlalchemy import MetaData, Table, func, and_
 
+
 class TestHash(TestCase):
     def test_none(self):
-        with TemporaryDirectory() as root:
+        with generate_structure(structures['complex']) as root:
             dbPath = os.path.join(root, 'hash.db')
-
             inputRoot = os.path.join(root, 'inputs')
-            generate_files(inputRoot, True)
 
-            main(['hash', '-n', dbPath, '--', os.path.join(inputRoot, 'b', 'y.txt'), os.path.join(inputRoot, 'e')])
+            main(['hash', '-n', dbPath, '--', inputRoot])
 
             engine = create(dbPath)
             metadata = MetaData()

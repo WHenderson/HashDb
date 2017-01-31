@@ -18,7 +18,7 @@ def create_schema(engine, schema='main'):
         Column('extension', String, nullable=False),
 
         Column('size', Integer, nullable=False),
-        Column('time', Float, nullable=False),
+        Column('time', Integer, nullable=False),
 
         Column('hash_quick', String(32), nullable=True),
         Column('hash_total', String(32), nullable=True)

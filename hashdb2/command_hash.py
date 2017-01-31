@@ -20,7 +20,7 @@ def command_hash(arguments):
                 for inputFile in inputFiles:
                     stat = inputFile.stat(follow_symlinks=False)
                     size = stat.st_size
-                    time = stat.st_mtime
+                    time = stat.st_mtime_ns
                     file = conn.execute(Files.select().where(Files.c.path == inputFile.path)).fetchone()
 
                     if file is None or size != file.size or time != file.time:
