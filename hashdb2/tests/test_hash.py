@@ -31,6 +31,10 @@ class TestHash(TestCase):
                 ]
                 outputFiles.sort()
 
+                print('#', name)
+                for file in outputFiles:
+                    print(file)
 
                 self.assertEqual(inputFiles, outputFiles)
+
 
