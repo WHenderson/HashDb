@@ -7,9 +7,9 @@ Usage:
     hashdb2 hash [-f|-q|-n] DATABASE -- INPUTS...
 
 Options:
-    -f|--full   Generate complete hash for each file
-    -q|--quick  Generate quick hash for each file
-    -n|--none   Do not generate hashes [default]
+    -f, --full   Generate complete hash for each file
+    -q, --quick  Generate quick hash for each file
+    -n, --none   Do not generate hashes [default]
 
     DATABASE    Name of the database to create/update
     INPUTS      List files/folders to add to DATABASE
