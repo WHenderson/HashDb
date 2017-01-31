@@ -22,36 +22,36 @@ def generate_files(root, createRoot=False):
     with open(os.path.join(root, 'e', 'f', 'z.txt'), 'wb'):
         pass
 
-FileInfo = namedtuple('File', ('path', 'data', 'time'))
+FileInfo = namedtuple('File', ('path', 'data', 'time', 'hash_quick', 'hash_total'))
 
 structures = {
     'non-existent': [],
     'empty': [
-        FileInfo('inputs', None, None),
+        FileInfo('inputs', None, None, None, None),
     ],
     'single-file': [
-        FileInfo('inputs', None, None),
-        FileInfo('inputs/only-file.txt', b'some content', 0),
+        FileInfo('inputs', None, None, None, None),
+        FileInfo('inputs/only-file.txt', b'some content', 0, '9893532233caff98cd083a116b013c0b', '9893532233caff98cd083a116b013c0b'),
     ],
     'single-folder': [
-        FileInfo('inputs', None, None),
-        FileInfo('inputs/only-folder', None, 0),
+        FileInfo('inputs', None, None, None, None),
+        FileInfo('inputs/only-folder', None, 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
     ],
     'complex': [
-        FileInfo('inputs', None, None),
-        FileInfo('inputs/a-file-no-extension', b'', 0),
-        FileInfo('inputs/a-file-with.extension', b'', 0),
-        FileInfo('inputs/a-file-with--64k-content', b'[ start....... ]'*(64*1024//16), 0),
-        FileInfo('inputs/a-file-with-128k-content', b'[ start....... ]'*(64*1024//16) + b'[ ...middle... ]'*(64*1024//16), 0),
-        FileInfo('inputs/a-file-with-192k-content', b'[ start....... ]'*(64*1024//16) + b'[ ...middle... ]'*(64*1024//16) + b'[ .........end ]'*(64*1024//16), 0),
-        FileInfo('inputs/a-file-with-200k-nulls', b'\0'*200*1024, 0),
-        FileInfo('inputs/an-empty-folder', None, None),
-        FileInfo('inputs/a-folder', None, None),
-        FileInfo('inputs/a-folder/a-file', b'', 0),
-        FileInfo('inputs/a-link-to-a-file', 'inputs/a-folder/a-file', 0),
-        FileInfo('inputs/a-link-to-a-folder', 'inputs/a-folder/', 0),
-        FileInfo('inputs/a-bad-file-link', 'inputs/file-does-not-exist', 0),
-        FileInfo('inputs/a-bad-folder-link', 'inputs/folder-does-not-exist/', 0),
+        FileInfo('inputs', None, None, None, None),
+        FileInfo('inputs/a-file-no-extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+        FileInfo('inputs/a-file-with.extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+        FileInfo('inputs/a-file-with--64k-content', b'[ start....... ]'*(64*1024//16), 0, '64f1d479c57ad4c63ac0fe548fefc16c', '64f1d479c57ad4c63ac0fe548fefc16c'),
+        FileInfo('inputs/a-file-with-128k-content', b'[ start....... ]'*(64*1024//16) + b'[ ...middle... ]'*(64*1024//16), 0, 'be8d3f4b5e419026509beb8b0aa14517', 'be8d3f4b5e419026509beb8b0aa14517'),
+        FileInfo('inputs/a-file-with-192k-content', b'[ start....... ]'*(64*1024//16) + b'[ ...middle... ]'*(64*1024//16) + b'[ .........end ]'*(64*1024//16), 0, 'd77e9be5c1ecf730da5afaedd3d3048a', 'd77e9be5c1ecf730da5afaedd3d3048a'),
+        FileInfo('inputs/a-file-with-200k-nulls', b'\0'*200*1024, 0, 'ef2e0d18474b2151ef5876b1e89c2f1d', 'c522c1db31cc1f90b5d21992fd30e2ab'),
+        FileInfo('inputs/an-empty-folder', None, None, None, None),
+        FileInfo('inputs/a-folder', None, None, None, None),
+        FileInfo('inputs/a-folder/a-file', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+        FileInfo('inputs/a-link-to-a-file', 'inputs/a-folder/a-file', 0, None, None),
+        FileInfo('inputs/a-link-to-a-folder', 'inputs/a-folder/', 0, None, None),
+        FileInfo('inputs/a-bad-file-link', 'inputs/file-does-not-exist', 0, None, None),
+        FileInfo('inputs/a-bad-folder-link', 'inputs/folder-does-not-exist/', 0, None, None),
     ],
 }
 

@@ -2,6 +2,7 @@ from .orm import create, create_schema
 from .walk import walk
 from sqlalchemy import MetaData, Table, func, and_
 import os.path
+from .hash import hashfile
 
 def command_hash(arguments):
     engine = create(arguments['DATABASE'])
@@ -23,13 +24,16 @@ def command_hash(arguments):
                     time = stat.st_mtime_ns
                     file = conn.execute(Files.select().where(Files.c.path == inputFile.path)).fetchone()
 
-                    if file is None or size != file.size or time != file.time:
+                    if file is None or size != file.size or time != file.time or (arguments['--quick'] and file.hash_quick is None) or (arguments['--full'] and file.hash_total is None):
                         # calculate changes
                         path = inputFile.path
                         name = inputFile.name
                         extension = os.path.splitext(name)[1]
                         hash_quick = None
                         hash_total = None
+
+                        if arguments['--quick'] or arguments['--full']:
+                            hash_quick, hash_total = hashfile(path, inputFile.stat(follow_symlinks=False), not arguments['--full'])
 
                         if file is None:
                             upsert = Files.insert().values(path=path, name=name, extension=extension)

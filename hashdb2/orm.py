@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, Table, Column, Integer, Float, String, Met
 
 #File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-def create(filename=':memory:', echo=True):
+def create(filename=':memory:', echo=False):
     return create_engine('sqlite:///%s' % (filename,), echo=echo)
 
 def attach(engine, name, filename=''):
