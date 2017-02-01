@@ -8,7 +8,7 @@ def command_hash(arguments, engine=None, schema='main'):
     if engine is None:
         engine = create(arguments['DATABASE'])
 
-    engine = create_schema(engine, schema)
+    create_schema(engine, schema)
 
     metadata = MetaData(schema=schema)
     Files = Table('Files', metadata, autoload=True, autoload_with=engine)
