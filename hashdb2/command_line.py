@@ -48,11 +48,14 @@ Options:
                         {RHSONLYGROUP}
                         {DUPE}
                         {DUPEGROUP}
+                        {UNIQUE}
+                        {UNIQUEGROUP}
 
                         LHS and RHS specifies the input
                         GROUP provides a list inputs, no GROUP provides them one at a team
                         Use ONLY to get inputs which have no match
-                        Use DUPE to get inputs which have duplicates in any database
+                        Use DUPE to get inputs which have duplicates (not valid with rhs)
+                        Use UNIQUE to get inputs which are unique  (not valid with rhs)
 '''
 
 from docopt import docopt

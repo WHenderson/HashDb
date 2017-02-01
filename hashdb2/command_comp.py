@@ -106,26 +106,28 @@ def command_comp(arguments):
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
         rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
 
+        def match(sel, lhs, rhs):
+            if arguments['--size']:
+                sel = sel.where(lhs.c.size == rhs.c.size)
+
+            if arguments['--time']:
+                sel = sel.where(lhs.c.time == rhs.c.time)
+
+            if arguments['--extension']:
+                sel = sel.where(lhs.c.extension == rhs.c.extension)
+
+            if arguments['--basename']:
+                sel = sel.where(lhs.c.basename == rhs.c.basename)
+
+            # Not looking for the actual same file
+            sel = sel.where(lhs.c.path != rhs.c.path)
+
+            return sel
+
         if not (lhsrwFiles is None and rhsrwFiles is None) and not arguments['--none']:
             # Do a preliminary comparison
-
-            def match(sel):
-                if arguments['--size']:
-                    sel = sel.where(lhsroFiles.c.size == rhsroFiles.c.size)
-
-                if arguments['--time']:
-                    sel = sel.where(lhsroFiles.c.time == rhsroFiles.c.time)
-
-                if arguments['--extension']:
-                    sel = sel.where(lhsroFiles.c.extension == rhsroFiles.c.extension)
-
-                if arguments['--basename']:
-                    sel = sel.where(lhsroFiles.c.basename == rhsroFiles.c.basename)
-
-                return sel
-
-            lhssel = match(select([lhsroFiles.c.path]))
-            rhssel = match(select([rhsroFiles.c.path]))
+            lhssel = match(select([lhsroFiles.c.path]), lhsroFiles, rhsroFiles)
+            rhssel = match(select([rhsroFiles.c.path]), lhsroFiles, rhsroFiles)
 
             # Update rw table
             conn = engine.connect()
@@ -140,4 +142,27 @@ def command_comp(arguments):
                 conn.close()
 
         # Do the full comparison
+
+        # 1) What we are selecting?
+        # 2) Inverted/Not Inverted?
+        # 3) Execute command with results
+        # ToDo: Work out how to handle dupe/unique
+
+        # Select should be formatted to suit the command
+        # {LHS}
+        # {LHS} {RHS}
+        # {LHS} {RHSGROUP}
+        # {LHSGROUP}
+        # {LHSGROUP} {RHS}
+        # {LHSGROUP} {RHSGROUP}
+        # {LHSONLY}
+        # {LHSONLYGROUP}
+        # {RHS}
+        # {RHSGROUP}
+        # {RHSONLY}
+        # {RHSONLYGROUP}
+        # {DUPE}
+        # {DUPEGROUP}
+        # {UNIQUE}
+        # {UNIQUEGROUP}
 
