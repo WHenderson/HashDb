@@ -4,11 +4,13 @@ from sqlalchemy import MetaData, Table, func, and_
 import os.path
 from .hash import hashfile
 
-def command_hash(arguments):
-    engine = create(arguments['DATABASE'])
-    engine = create_schema(engine)
+def command_hash(arguments, engine=None, schema='main'):
+    if engine is None:
+        engine = create(arguments['DATABASE'])
 
-    metadata = MetaData()
+    engine = create_schema(engine, schema)
+
+    metadata = MetaData(schema=schema)
     Files = Table('Files', metadata, autoload=True, autoload_with=engine)
 
     conn = engine.connect()

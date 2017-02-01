@@ -5,48 +5,54 @@ Usage:
     hashdb2 -h | --help
     hashdb2 --version
     hashdb2 hash [-f|-q|-n] DATABASE -- INPUTS...
-    hashdb2 comp [-stfqneb] LHS [RHS] -- COMMAND...
+    hashdb2 comp [-stfqneb] ((--lhs-db LHSDB [--lhs-update] [--lhs-path LHSPATH]) | --lhs-path LHSPATH) [(--rhs-db RHSDB [--rhs-update] [--rhs-path RHSPATH]) | --rhs-path RHSPATH] -- COMMAND...
 
 Options:
-    hash             Create/Update DATABASE with INPUTS
-    comp             Compare inputs, executing COMMAND for each result according to the special arguments provided to COMMAND
+    hash                Create/Update DATABASE with INPUTS
+    comp                Compare inputs, executing COMMAND for each result according to the special arguments provided to COMMAND
 
-    -f, --full       Generate/Compare complete hash
-    -q, --quick      Generate/Compare quick hash
-    -n, --none       Do not generate/compare hashes [default]
+    -f, --full          Generate/Compare complete hash
+    -q, --quick         Generate/Compare quick hash
+    -n, --none          Do not generate/compare hashes [default]
 
-    -s, --size       Compare using size [default]
-    -t, --time       Compare using modification time
+    -s, --size          Compare using size [default]
+    -t, --time          Compare using modification time
 
-    -e, --extension  Compare using file extension [default]
-    -b, --basename   Compare using basename
+    -e, --extension     Compare using file extension [default]
+    -b, --basename      Compare using basename
 
-    DATABASE         Name of the database to create/update
-    INPUTS           List files/folders to add to DATABASE
-    LHS              Left input
-    RHS              Right input
-    COMMAND          Command which is executed according to matched groups
-                     The following values within command have special meaning:
+    --lhs-db LHSDB      Left database input
+    --lhs-update        Update left database as required
+    --lhs-path LHSPATH  Left sub-path
 
-                     {LHS}
-                     {LHS} {RHS}
-                     {LHS} {RHSGROUP}
-                     {LHSGROUP}
-                     {LHSGROUP} {RHS}
-                     {LHSGROUP} {RHSGROUP}
-                     {LHSONLY}
-                     {LHSONLYGROUP}
-                     {RHS}
-                     {RHSGROUP}
-                     {RHSONLY}
-                     {RHSONLYGROUP}
-                     {DUPE}
-                     {DUPEGROUP}
+    --rhs-db RHSDB      Right database input
+    --rhs-update        Update right database as required
+    --rhs-path RHSPATH  Right sub-path
 
-                     LHS and RHS specifies the input
-                     GROUP provides a list inputs, no GROUP provides them one at a team
-                     Use ONLY to get inputs which have no match
-                     Use DUPE to get inputs which have duplicates in any database
+    DATABASE            Name of the database to create/update
+    INPUTS              List files/folders to add to DATABASE
+    COMMAND             Command which is executed according to matched groups
+                        The following values within command have special meaning:
+
+                        {LHS}
+                        {LHS} {RHS}
+                        {LHS} {RHSGROUP}
+                        {LHSGROUP}
+                        {LHSGROUP} {RHS}
+                        {LHSGROUP} {RHSGROUP}
+                        {LHSONLY}
+                        {LHSONLYGROUP}
+                        {RHS}
+                        {RHSGROUP}
+                        {RHSONLY}
+                        {RHSONLYGROUP}
+                        {DUPE}
+                        {DUPEGROUP}
+
+                        LHS and RHS specifies the input
+                        GROUP provides a list inputs, no GROUP provides them one at a team
+                        Use ONLY to get inputs which have no match
+                        Use DUPE to get inputs which have duplicates in any database
 '''
 
 from docopt import docopt
@@ -69,6 +75,9 @@ def main(argv=None):
     if arguments['hash']:
         from .command_hash import command_hash
         command_hash(arguments)
+    elif arguments['comp']:
+        from .command_comp import command_comp
+        command_comp(arguments)
 
 if __name__ == '__main__':
     main()
