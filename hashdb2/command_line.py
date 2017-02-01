@@ -5,7 +5,7 @@ Usage:
     hashdb2 -h | --help
     hashdb2 --version
     hashdb2 hash [-f|-q|-n] DATABASE -- INPUTS...
-    hashdb2 comp [-stfqneb] ((--lhs-db LHSDB [--lhs-update] [--lhs-path LHSPATH]) | --lhs-path LHSPATH) [(--rhs-db RHSDB [--rhs-update] [--rhs-path RHSPATH]) | --rhs-path RHSPATH] -- COMMAND...
+    hashdb2 comp [-f|-q|-n] [-steb] ((--lhs-db LHSDB [--lhs-update] [--lhs-path LHSPATH]) | --lhs-path LHSPATH) [(--rhs-db RHSDB [--rhs-update] [--rhs-path RHSPATH]) | --rhs-path RHSPATH] -- COMMAND...
 
 Options:
     hash                Create/Update DATABASE with INPUTS
@@ -15,10 +15,10 @@ Options:
     -q, --quick         Generate/Compare quick hash
     -n, --none          Do not generate/compare hashes [default]
 
-    -s, --size          Compare using size [default]
+    -s, --size          Compare using size
     -t, --time          Compare using modification time
 
-    -e, --extension     Compare using file extension [default]
+    -e, --extension     Compare using file extension
     -b, --basename      Compare using basename
 
     --lhs-db LHSDB      Left database input

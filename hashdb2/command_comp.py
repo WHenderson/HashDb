@@ -93,6 +93,13 @@ def attach_side(engine, side, dbpath, update, subpath):
 
 
 def command_comp(arguments):
+
+    if not any(arguments[name] for name in ('--full', '--quick', '--none')):
+        arguments['--none'] = True
+
+    if not arguments['--none']:
+        arguments['--size'] = True
+
     engine = create(None)
     with engine_dispose(engine):
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
