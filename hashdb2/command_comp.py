@@ -1,7 +1,9 @@
 from .orm import create, attach, create_schema, touch, CreateView, engine_dispose
 from .command_hash import command_hash
-from sqlalchemy import MetaData, Table, and_, or_, func, select
+from sqlalchemy import MetaData, Table, and_, or_, func, select, exists
 import os.path
+import re
+from docopt import DocoptExit
 
 def is_subpath(column, subpath):
     subpathdir = subpath
@@ -101,28 +103,170 @@ def command_comp(arguments):
     if not arguments['--none']:
         arguments['--size'] = True
 
+    def match(sel, lhs, rhs, complete=False):
+        if arguments['--size']:
+            sel = sel.where(lhs.c.size == rhs.c.size)
+
+        if arguments['--time']:
+            sel = sel.where(lhs.c.time == rhs.c.time)
+
+        if arguments['--extension']:
+            sel = sel.where(lhs.c.extension == rhs.c.extension)
+
+        if arguments['--basename']:
+            sel = sel.where(lhs.c.basename == rhs.c.basename)
+
+        if complete and arguments['--quick']:
+            sel = sel.where(and_(
+                lhs.c.hash_quick == rhs.c.hash_quick,
+                lhs.c.hash_quick != None
+            ))
+
+        if complete and arguments['--full']:
+            sel = sel.where(and_(
+                lhs.c.hash_total == rhs.c.hash_total,
+                lhs.c.hash_total != None
+            ))
+
+        # Not looking for the actual same file
+        sel = sel.where(lhs.c.path != rhs.c.path)
+
+        return sel
+
+    def match_group(sel, lhs, rhs):
+        group = []
+        if arguments['--size']:
+            group.append(lhs.c.size)
+
+        if arguments['--time']:
+            group.append(lhs.c.time)
+
+        if arguments['--extension']:
+            group.append(lhs.c.extension)
+
+        if arguments['--basename']:
+            group.append(lhs.c.basename)
+
+        if arguments['--quick']:
+            group.append(lhs.c.hash_quick)
+
+        if arguments['--full']:
+            group.append(lhs.c.hash_total)
+
+        if len(group) != 0:
+            sel = sel.group_by(group)
+
+        return sel
+
+    # ToDo: Add tests for each combination
+    args = set(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])
+    if args == {'{LHS}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('LHS')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by([lhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHS}', '{RHS}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('LHS'), rhs.c.path.label('RHS')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by([lhs.c.path, rhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHS}', '{RHSGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('LHS'), func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.group_by([lhs.c.path])
+            sel = sel.order_by([lhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHSGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by([lhs.c.path])
+            return sel
+    elif args == {'{LHSGROUP}', '{RHS}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), rhs.c.path.label('RHS')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.group_by([rhs.c.path])
+            sel = sel.order_by([rhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHSGROUP}', '{RHSGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = match(sel, lhs, rhs)
+            sel = match_group(sel, lhs, rhs)
+            sel = sel.order_by([rhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHSONLY}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('LHS')])
+            sel = sel.where(not exists(
+                match(select([rhs.c.path]), lhs, rhs)
+            ))
+            sel = sel.order_by([lhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{LHSONLYGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
+            sel = sel.where(not exists(
+                match(select([rhs.c.path]), lhs, rhs)
+            ))
+            sel = sel.order_by([lhs.c.path])
+            return sel
+    elif args == {'{RHS}'}:
+        def get_sel(lhs, rhs):
+            sel = select([rhs.c.path.label('RHS')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by([rhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{RHSGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by([rhs.c.path])
+            return sel
+    elif args == {'{RHSONLY}'}:
+        def get_sel(lhs, rhs):
+            sel = select([rhs.c.path.label('RHS')])
+            sel = sel.where(not exists(
+                match(select([lhs.c.path]), lhs, rhs)
+            ))
+            sel = sel.order_by([rhs.c.path])
+            sel = sel.distinct()
+            return sel
+    elif args == {'{RHSONLYGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(rhs.c.path).label('LHSGROUP')])
+            sel = sel.where(not exists(
+                match(select([lhs.c.path]), lhs, rhs)
+            ))
+            sel = sel.order_by([rhs.c.path])
+            return sel
+    elif args == {'{DUPE}'}:
+        # ToDo: Work out how to handle dupe/unique
+        raise DocoptExit('DUPE not implemented yet')
+    elif args == {'{DUPEGROUP}'}:
+        raise DocoptExit('DUPEGROUP not implemented yet')
+    elif args == {'{UNIQUE}'}:
+        raise DocoptExit('UNIQUE not implemented yet')
+    elif args == {'{UNIQUEGROUP}'}:
+        raise DocoptExit('UNIQUEGROUP not implemented yet')
+    else:
+        raise DocoptExit('COMMAND does not contain a valid combination of special arguments')
+
     engine = create(None)
     with engine_dispose(engine):
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
         rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
-
-        def match(sel, lhs, rhs):
-            if arguments['--size']:
-                sel = sel.where(lhs.c.size == rhs.c.size)
-
-            if arguments['--time']:
-                sel = sel.where(lhs.c.time == rhs.c.time)
-
-            if arguments['--extension']:
-                sel = sel.where(lhs.c.extension == rhs.c.extension)
-
-            if arguments['--basename']:
-                sel = sel.where(lhs.c.basename == rhs.c.basename)
-
-            # Not looking for the actual same file
-            sel = sel.where(lhs.c.path != rhs.c.path)
-
-            return sel
 
         if not (lhsrwFiles is None and rhsrwFiles is None) and not arguments['--none']:
             # Do a preliminary comparison
@@ -133,36 +277,18 @@ def command_comp(arguments):
             conn = engine.connect()
             try:
                 for result in conn.execute(lhssel):
-                    # ToDo: Update hash for lhsrw
+                    # ToDo: Update hash (and metadata?) for lhsrw
                     pass
                 for result in conn.execute(rhssel):
-                    # ToDo: Update hash for rhsrw
+                    # ToDo: Update hash (and metadata?) for rhsrw
                     pass
             finally:
                 conn.close()
 
         # Do the full comparison
 
-        # 1) What we are selecting?
-        # 2) Inverted/Not Inverted?
-        # 3) Execute command with results
-        # ToDo: Work out how to handle dupe/unique
-
-        # Select should be formatted to suit the command
-        # {LHS}
-        # {LHS} {RHS}
-        # {LHS} {RHSGROUP}
-        # {LHSGROUP}
-        # {LHSGROUP} {RHS}
-        # {LHSGROUP} {RHSGROUP}
-        # {LHSONLY}
-        # {LHSONLYGROUP}
-        # {RHS}
-        # {RHSGROUP}
-        # {RHSONLY}
-        # {RHSONLYGROUP}
-        # {DUPE}
-        # {DUPEGROUP}
-        # {UNIQUE}
-        # {UNIQUEGROUP}
-
+        sel = get_sel(lhsrwFiles or lhsroFiles, rhsrwFiles or rhsroFiles)
+        for result in conn.execute(sel):
+            cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
+            print(cmd)
+            #ToDo: Execute command
