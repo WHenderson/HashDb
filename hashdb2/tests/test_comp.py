@@ -47,7 +47,7 @@ class TestComp(TestCase):
             dbRhs = os.path.join(root, 'rhs.db')
             #inputRoot = os.path.join(root, 'inputs')
 
-            main(['comp', '--lhs-db', dbLhs, '--lhs-path', 'lhs', '--rhs-db', dbRhs, '--rhs-path', 'rhs', '--', 'echo', '{LHS}', '{RHS}'])
+            main(['comp', '--lhs-db', dbLhs, '--lhs-path', 'lhs', '--rhs-db', dbRhs, '--rhs-path', 'rhs', '--', 'echo', '{LHSGROUP}', '{RHSGROUP}'])
 
 
 

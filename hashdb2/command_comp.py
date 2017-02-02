@@ -146,31 +146,6 @@ def command_comp(arguments):
 
         return sel
 
-    def match_group(sel, lhs, rhs):
-        group = []
-        if arguments['--size']:
-            group.append(lhs.c.size)
-
-        if arguments['--time']:
-            group.append(lhs.c.time)
-
-        if arguments['--extension']:
-            group.append(lhs.c.extension)
-
-        if arguments['--basename']:
-            group.append(lhs.c.basename)
-
-        if arguments['--quick']:
-            group.append(lhs.c.hash_quick)
-
-        if arguments['--full']:
-            group.append(lhs.c.hash_total)
-
-        if len(group) != 0:
-            sel = sel.group_by(group)
-
-        return sel
-
     # ToDo: Add tests for each combination
     args = set(chain(*(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])))
     if args == {'{LHS}'}:
@@ -211,9 +186,31 @@ def command_comp(arguments):
             return sel
     elif args == {'{LHSGROUP}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = select([func.group_concat(lhs.c.path.distinct()).label('LHSGROUP'), func.group_concat(rhs.c.path.distinct()).label('RHSGROUP')])
+            #ToDo: fix the ordering of the group items and the overall result set
+            #sel = select([lhs.c.path.label('LHSGROUP'), rhs.c.path.label('RHSGROUP')])
+
             sel = match(sel, lhs, rhs)
-            sel = match_group(sel, lhs, rhs)
+
+            if arguments['--size']:
+                sel = sel.group_by(lhs.c.size).order_by(lhs.c.size)
+
+            if arguments['--time']:
+                sel = sel.group_by(lhs.c.time).order_by(lhs.c.time)
+
+            if arguments['--extension']:
+                sel = sel.group_by(lhs.c.extension).order_by(lhs.c.extension)
+
+            if arguments['--basename']:
+                sel = sel.group_by(lhs.c.basename).order_by(lhs.c.basename)
+
+            if arguments['--quick']:
+                sel = sel.group_by(lhs.c.hash_quick).order_by(lhs.c.hash_quick)
+
+            if arguments['--full']:
+                sel = sel.group_by(lhs.c.hash_total).order_by(lhs.c.hash_total)
+
+            sel = sel.order_by(lhs.c.path)
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
