@@ -172,36 +172,36 @@ def command_comp(arguments):
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS')])
             sel = match(sel, lhs, rhs)
-            sel = sel.order_by([lhs.c.path])
+            sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHS}', '{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS'), rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
-            sel = sel.order_by([lhs.c.path, rhs.c.path])
+            sel = sel.order_by(lhs.c.path).order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHS}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS'), func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
-            sel = sel.group_by([lhs.c.path])
-            sel = sel.order_by([lhs.c.path])
+            sel = sel.group_by(lhs.c.path)
+            sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
             sel = match(sel, lhs, rhs)
-            sel = sel.order_by([lhs.c.path])
+            sel = sel.order_by(lhs.c.path)
             return sel
     elif args == {'{LHSGROUP}', '{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
-            sel = sel.group_by([rhs.c.path])
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.group_by(rhs.c.path)
+            sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHSGROUP}', '{RHSGROUP}'}:
@@ -209,7 +209,7 @@ def command_comp(arguments):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
             sel = match_group(sel, lhs, rhs)
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHSONLY}'}:
@@ -218,7 +218,7 @@ def command_comp(arguments):
             sel = sel.where(not exists(
                 match(select([rhs.c.path]), lhs, rhs)
             ))
-            sel = sel.order_by([lhs.c.path])
+            sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHSONLYGROUP}'}:
@@ -227,20 +227,20 @@ def command_comp(arguments):
             sel = sel.where(not exists(
                 match(select([rhs.c.path]), lhs, rhs)
             ))
-            sel = sel.order_by([lhs.c.path])
+            sel = sel.order_by(lhs.c.path)
             return sel
     elif args == {'{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.order_by(rhs.c.path)
             return sel
     elif args == {'{RHSONLY}'}:
         def get_sel(lhs, rhs):
@@ -248,7 +248,7 @@ def command_comp(arguments):
             sel = sel.where(not exists(
                 match(select([lhs.c.path]), lhs, rhs)
             ))
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{RHSONLYGROUP}'}:
@@ -257,7 +257,7 @@ def command_comp(arguments):
             sel = sel.where(not exists(
                 match(select([lhs.c.path]), lhs, rhs)
             ))
-            sel = sel.order_by([rhs.c.path])
+            sel = sel.order_by(rhs.c.path)
             return sel
     elif args == {'{DUPE}'}:
         # ToDo: Work out how to handle dupe/unique
@@ -273,6 +273,8 @@ def command_comp(arguments):
 
     engine = create(None)
     with engine_dispose(engine):
+
+
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
         rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
 
@@ -311,8 +313,16 @@ def command_comp(arguments):
 
         # Do the full comparison
 
-        sel = get_sel(lhsrwFiles or lhsroFiles, rhsrwFiles or rhsroFiles)
-        for result in conn.execute(sel):
-            cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
-            print(cmd)
-            #ToDo: Execute command
+        sel = get_sel(
+            lhsroFiles if lhsrwFiles is None else lhsrwFiles,
+            rhsroFiles if rhsrwFiles is None else rhsrwFiles
+        )
+
+        conn = engine.connect()
+        try:
+            for result in conn.execute(sel):
+                cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
+                print(cmd)
+                #ToDo: Execute command
+        finally:
+            conn.close()
