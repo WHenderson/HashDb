@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 #File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-def create(filename, echo=False):
+def create(filename, echo=True):
     if filename is None:
         return create_engine('sqlite://', echo=echo)
     else:

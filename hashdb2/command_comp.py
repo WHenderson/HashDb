@@ -99,6 +99,10 @@ def attach_side(engine, side, dbpath, update, subpath):
 
 def command_comp(arguments):
 
+    if not any(arguments[name] for name in ('--full', '--quick', '--none', '--size', '--time', '--extension', '--basename')):
+        arguments['--full'] = True
+        arguments['--extension'] = True
+
     if not any(arguments[name] for name in ('--full', '--quick', '--none')):
         arguments['--none'] = True
 
@@ -111,7 +115,7 @@ def command_comp(arguments):
     if arguments['--rhs-update'] and arguments['--rhs-path']:
         arguments['--rhs-path'] = os.path.realpath(arguments['--rhs-path'])
 
-    def match(sel, lhs, rhs, complete=False):
+    def match(sel, lhs, rhs, complete=True):
         if arguments['--size']:
             sel = sel.where(lhs.c.size == rhs.c.size)
 
@@ -124,17 +128,18 @@ def command_comp(arguments):
         if arguments['--basename']:
             sel = sel.where(lhs.c.basename == rhs.c.basename)
 
-        if complete and arguments['--quick']:
-            sel = sel.where(and_(
-                lhs.c.hash_quick == rhs.c.hash_quick,
-                lhs.c.hash_quick != None
-            ))
+        if complete:
+            if arguments['--quick']:
+                sel = sel.where(and_(
+                    lhs.c.hash_quick == rhs.c.hash_quick,
+                    lhs.c.hash_quick != None
+                ))
 
-        if complete and arguments['--full']:
-            sel = sel.where(and_(
-                lhs.c.hash_total == rhs.c.hash_total,
-                lhs.c.hash_total != None
-            ))
+            if arguments['--full']:
+                sel = sel.where(and_(
+                    lhs.c.hash_total == rhs.c.hash_total,
+                    lhs.c.hash_total != None
+                ))
 
         # Not looking for the actual same file
         sel = sel.where(lhs.c.path != rhs.c.path)
@@ -273,15 +278,21 @@ def command_comp(arguments):
 
     engine = create(None)
     with engine_dispose(engine):
-
-
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
         rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
 
         if not arguments['--none'] and (lhsrwFiles != None or rhsrwFiles != None):
             # Do a preliminary comparison
-            lhssel = match(select([lhsroFiles.c.path]), lhsroFiles, rhsroFiles)
-            rhssel = match(select([rhsroFiles.c.path]), lhsroFiles, rhsroFiles)
+            lhssel = match(select([lhsroFiles.c.path]), lhsroFiles, rhsroFiles, False)
+            rhssel = match(select([rhsroFiles.c.path]), lhsroFiles, rhsroFiles, False)
+
+            if arguments['--quick']:
+                lhssel = lhssel.where(lhsroFiles.c.hash_quick == None)
+                rhssel = rhssel.where(lhsroFiles.c.hash_quick == None)
+
+            if arguments['--full']:
+                lhssel = lhssel.where(lhsroFiles.c.hash_total == None)
+                rhssel = rhssel.where(lhsroFiles.c.hash_total == None)
 
             # Update rw table
             conn = engine.connect()

@@ -57,7 +57,11 @@ structures = {
 
 @contextmanager
 def generate_structure(files):
+
     with TemporaryDirectory() as root:
+        original_cwd = os.getcwd()
+        os.chdir(root)
+
         for file in files:
             targetPath = os.path.join(root, file.path)
             if file.data is None:
@@ -82,3 +86,5 @@ def generate_structure(files):
 
 
         yield root
+
+        os.chdir(original_cwd)

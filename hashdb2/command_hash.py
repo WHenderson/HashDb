@@ -3,7 +3,7 @@ from .walk import walk
 from sqlalchemy import MetaData, Table, func, and_
 import os.path
 from stat import S_ISREG
-from .hash import hashfile
+from .hash import hashfile, HASH_ZERO
 
 def command_hash(arguments, engine=None, schema='main'):
     if engine is None:
@@ -46,7 +46,10 @@ def command_hash(arguments, engine=None, schema='main'):
                         hash_quick = None
                         hash_total = None
 
-                        if arguments['--quick'] or arguments['--full']:
+                        if size == 0:
+                            hash_quick = HASH_ZERO
+                            hash_total = HASH_ZERO
+                        elif arguments['--quick'] or arguments['--full']:
                             hash_quick, hash_total = hashfile(path, stat, not arguments['--full'])
                             if hash_quick is None and hash_total is None:
                                 badFiles.add(inputFile)
