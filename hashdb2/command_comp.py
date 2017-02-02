@@ -3,7 +3,9 @@ from .command_hash import command_hash
 from sqlalchemy import MetaData, Table, and_, or_, func, select, exists
 import os.path
 import re
+from .hash import hashfile
 from docopt import DocoptExit
+from itertools import chain
 
 def is_subpath(column, subpath):
     subpathdir = subpath
@@ -165,7 +167,7 @@ def command_comp(arguments):
         return sel
 
     # ToDo: Add tests for each combination
-    args = set(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])
+    args = set(chain(*(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])))
     if args == {'{LHS}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS')])
@@ -281,13 +283,29 @@ def command_comp(arguments):
 
             # Update rw table
             conn = engine.connect()
+
+            def updaterw(ro,rw,sel):
+                for result in conn.execute(sel):
+                    file = conn.execute(rw.select().where(rw.c.path == result.path)).fetchone()
+                    try:
+                        stat = os.stat(result.path, follow_symlinks=False)
+                    except Exception:
+                        hash_quick, hash_total = None, None
+                    else:
+                        hash_quick, hash_total = hashfile(result.path, stat, arguments['--quick'])
+
+                    if hash_quick != None or hash_total != None:
+                        conn.execute(rw.update().where(rw.c.path == result.path).values(
+                            size = stat.st_size,
+                            time = stat.st_mtime_ns,
+                            hash_quick = hash_quick,
+                            hash_total = hash_total
+                        ))
+                    else:
+                        conn.execute(rw.delete().where(rw.c.path == result.path))
             try:
-                for result in conn.execute(lhssel):
-                    # ToDo: Update hash (and metadata?) for lhsrw
-                    pass
-                for result in conn.execute(rhssel):
-                    # ToDo: Update hash (and metadata?) for rhsrw
-                    pass
+                updaterw(lhsroFiles, lhsrwFiles, lhssel)
+                updaterw(rhsroFiles, rhsrwFiles, rhssel)
             finally:
                 conn.close()
 

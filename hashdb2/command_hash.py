@@ -47,7 +47,7 @@ def command_hash(arguments, engine=None, schema='main'):
                         hash_total = None
 
                         if arguments['--quick'] or arguments['--full']:
-                            hash_quick, hash_total = hashfile(path, inputFile.stat(follow_symlinks=False), not arguments['--full'])
+                            hash_quick, hash_total = hashfile(path, stat, not arguments['--full'])
                             if hash_quick is None and hash_total is None:
                                 badFiles.add(inputFile)
                                 continue
