@@ -103,6 +103,12 @@ def command_comp(arguments):
     if not arguments['--none']:
         arguments['--size'] = True
 
+    if arguments['--lhs-update'] and arguments['--lhs-path']:
+        arguments['--lhs-path'] = os.path.realpath(arguments['--lhs-path'])
+
+    if arguments['--rhs-update'] and arguments['--rhs-path']:
+        arguments['--rhs-path'] = os.path.realpath(arguments['--rhs-path'])
+
     def match(sel, lhs, rhs, complete=False):
         if arguments['--size']:
             sel = sel.where(lhs.c.size == rhs.c.size)
@@ -268,7 +274,7 @@ def command_comp(arguments):
         lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
         rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
 
-        if not (lhsrwFiles is None and rhsrwFiles is None) and not arguments['--none']:
+        if not arguments['--none'] and (lhsrwFiles != None or rhsrwFiles != None):
             # Do a preliminary comparison
             lhssel = match(select([lhsroFiles.c.path]), lhsroFiles, rhsroFiles)
             rhssel = match(select([rhsroFiles.c.path]), lhsroFiles, rhsroFiles)
