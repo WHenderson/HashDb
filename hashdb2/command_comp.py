@@ -288,11 +288,11 @@ def command_comp(arguments):
 
             if arguments['--quick']:
                 lhssel = lhssel.where(lhsroFiles.c.hash_quick == None)
-                rhssel = rhssel.where(lhsroFiles.c.hash_quick == None)
+                rhssel = rhssel.where(rhsroFiles.c.hash_quick == None)
 
             if arguments['--full']:
                 lhssel = lhssel.where(lhsroFiles.c.hash_total == None)
-                rhssel = rhssel.where(lhsroFiles.c.hash_total == None)
+                rhssel = rhssel.where(rhsroFiles.c.hash_total == None)
 
             # Update rw table
             conn = engine.connect()
