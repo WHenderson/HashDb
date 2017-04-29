@@ -23,11 +23,11 @@ class TestHash(TestCase):
                     Files = Table('Files', metadata, autoload=True, autoload_with=engine)
 
                     def hash_quick(file):
-                        if (hashMode == '-q') or (hashMode == '-f'):
+                        if (hashMode == '-q') or (hashMode == '-f') or file.data == None or len(file.data) == 0:
                             return file.hash_quick
                         return None
                     def hash_total(file):
-                        if (hashMode == '-q' and len(file.data) <= HASHBLOCK_QUICK*3) or (hashMode == '-f'):
+                        if (hashMode == '-q' and len(file.data) <= HASHBLOCK_QUICK*3) or (hashMode == '-f') or file.data == None or len(file.data) == 0:
                             return file.hash_total
                         return None
 
@@ -46,6 +46,9 @@ class TestHash(TestCase):
                     for file in outputFiles:
                         print(file)
 
-                    self.assertEqual(inputFiles, outputFiles)
+                    try:
+                        self.assertEqual(inputFiles, outputFiles)
+                    except Exception as ex:
+                        raise ex
 
 

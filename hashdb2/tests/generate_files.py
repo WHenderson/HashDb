@@ -60,31 +60,33 @@ def generate_structure(files):
 
     with TemporaryDirectory() as root:
         original_cwd = os.getcwd()
-        os.chdir(root)
+        try:
+            os.chdir(root)
 
-        for file in files:
-            targetPath = os.path.join(root, file.path)
-            if file.data is None:
-                os.mkdir(targetPath)
-                continue
-            elif isinstance(file.data, bytes) or isinstance(file.data, bytearray):
-                with open(os.path.join(root, file.path), 'wb') as fp:
-                    fp.write(file.data)
+            for file in files:
+                targetPath = os.path.join(root, file.path)
+                if file.data is None:
+                    os.mkdir(targetPath)
+                    continue
+                elif isinstance(file.data, bytes) or isinstance(file.data, bytearray):
+                    with open(os.path.join(root, file.path), 'wb') as fp:
+                        fp.write(file.data)
 
-                try:
-                    os.utime(targetPath, ns=(file.time, file.time), follow_symlinks=False)
-                except NotImplementedError:
-                    os.utime(targetPath, ns=(file.time, file.time))
+                    try:
+                        os.utime(targetPath, ns=(file.time, file.time), follow_symlinks=False)
+                    except NotImplementedError:
+                        os.utime(targetPath, ns=(file.time, file.time))
 
-            elif isinstance(file.data, str):
-                sourcePath = os.path.join(root, file.data)
-                is_dir = sourcePath.endswith('/')
-                if is_dir:
-                    sourcePath = sourcePath[:-1]
-                #print('%s : %s', targetPath, os.path.relpath(sourcePath, targetPath))
-                os.symlink(os.path.relpath(sourcePath, os.path.dirname(targetPath)), targetPath, is_dir)
+                elif isinstance(file.data, str):
+                    sourcePath = os.path.join(root, file.data)
+                    is_dir = sourcePath.endswith('/')
+                    if is_dir:
+                        sourcePath = sourcePath[:-1]
+                    #print('%s : %s', targetPath, os.path.relpath(sourcePath, targetPath))
+                    os.symlink(os.path.relpath(sourcePath, os.path.dirname(targetPath)), targetPath, is_dir)
 
 
-        yield root
+            yield root
 
-        os.chdir(original_cwd)
+        finally:
+            os.chdir(original_cwd)

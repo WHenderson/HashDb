@@ -55,8 +55,9 @@ def attach_side(engine, side, dbpath, update, subpath):
             if subpath:
                 command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True }, engine=engine, schema=rw)
 
-            engine.execute(CreateView(ro, sel))
-            roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            #engine.execute(CreateView(ro, sel))
+            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            roFiles = sel.cte(ro)
 
             return rwFiles, roFiles
         else:
@@ -76,8 +77,9 @@ def attach_side(engine, side, dbpath, update, subpath):
                 # ro = view of lhsdb
                 pass
 
-            engine.execute(CreateView(ro, sel))
-            roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            #engine.execute(CreateView(ro, sel))
+            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            roFiles = sel.cte(ro)
 
             return None, roFiles
     else:
@@ -88,8 +90,9 @@ def attach_side(engine, side, dbpath, update, subpath):
         create_schema(engine, rw)
         rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
 
-        engine.execute(CreateView(ro, rwFiles.select()))
-        roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+        #engine.execute(CreateView(ro, rwFiles.select()))
+        #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+        roFiles = rwFiles.select().cte(ro)
 
         if subpath:
             command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
