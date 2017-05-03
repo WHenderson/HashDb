@@ -100,7 +100,7 @@ def attach_side(engine, side, dbpath, update, subpath):
         return rwFiles, roFiles
 
 
-def command_comp(arguments):
+def command_comp(arguments, fcapture=None):
 
     if not any(arguments[name] for name in ('--full', '--quick', '--none', '--size', '--time', '--extension', '--basename')):
         arguments['--full'] = True
@@ -333,7 +333,13 @@ def command_comp(arguments):
         try:
             for result in conn.execute(sel):
                 cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
-                print(cmd)
-                #ToDo: Execute command
+
+                if fcapture != None:
+                    fcapture(cmd)
+                else:
+                    print(cmd)
+                    #ToDo: Execute command
+        except Exception as ex:
+            raise ex
         finally:
             conn.close()

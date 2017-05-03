@@ -57,11 +57,10 @@ structures = {
 
 @contextmanager
 def generate_structure(files):
-
+    original_cwd = os.getcwd()
     with TemporaryDirectory() as root:
-        original_cwd = os.getcwd()
+        os.chdir(root)
         try:
-            os.chdir(root)
 
             for file in files:
                 targetPath = os.path.join(root, file.path)
@@ -88,5 +87,9 @@ def generate_structure(files):
 
             yield root
 
+        except Exception as ex:
+            raise ex
         finally:
             os.chdir(original_cwd)
+
+

@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 #File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-def create(filename, echo=True):
+def create(filename, echo=False):
     if filename is None:
         return create_engine('sqlite://', echo=echo)
     else:
@@ -52,5 +52,8 @@ def visit_create_view(element, compiler, **kw):
 
 @contextmanager
 def engine_dispose(engine):
-    yield engine
+    try:
+        yield engine
+    except Exception as ex:
+        pass
     engine.dispose()

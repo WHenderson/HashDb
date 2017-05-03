@@ -47,8 +47,34 @@ class TestComp(TestCase):
             dbRhs = os.path.join(root, 'rhs.db')
             #inputRoot = os.path.join(root, 'inputs')
 
-            main(['comp', '--lhs-db', dbLhs, '--lhs-path', 'lhs', '--rhs-db', dbRhs, '--rhs-path', 'rhs', '--', 'echo', '{LHSGROUP}', '{RHSGROUP}'])
+            results = []
+            def capture(result):
+                results.append(result)
 
+            for args in [
+                ['{LHS}'],
+                ['{LHS}', '{RHS}'],
+                ['{LHS}', '{RHSGROUP}'],
+                ['{LHSGROUP}'],
+                ['{LHSGROUP}', '{RHS}'],
+                ['{LHSGROUP}', '{RHSGROUP}'],
+                ['{LHSONLY}'],
+                ['{LHSONLYGROUP}'],
+                ['{RHS}'],
+                ['{RHSGROUP}'],
+                ['{RHSONLY}'],
+                ['{RHSONLYGROUP}']
+            ]:
+                print('args:', ' '.join(args))
+
+                main(['comp', '--lhs-db', dbLhs, '--lhs-path', os.path.join(root, 'lhs'), '--rhs-db', dbRhs, '--rhs-path', os.path.join(root, 'rhs'), '--'] + args, fcapture=capture)
+
+                for result in results:
+                    for i in range(len(result)):
+                        result[i] = result[i].replace(root, '').replace('\\', '/')
+                    print(result)
+
+                #print(results)
 
 
 

@@ -65,7 +65,7 @@ version = pkg_resources.require("hashdb2")[0].version
 
 import sys
 
-def main(argv=None):
+def main(argv=None, fcapture=None):
     if argv is None:
         argv = sys.argv
     else:
@@ -73,14 +73,14 @@ def main(argv=None):
 
     global __doc__
     arguments = docopt(__doc__, argv[1:], version='HashDb2 ' + version)
-    print(arguments)
+    #print(arguments)
 
     if arguments['hash']:
         from .command_hash import command_hash
         command_hash(arguments)
     elif arguments['comp']:
         from .command_comp import command_comp
-        command_comp(arguments)
+        command_comp(arguments, fcapture=fcapture)
 
 if __name__ == '__main__':
     main()
