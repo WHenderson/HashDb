@@ -52,8 +52,9 @@ Options:
                         {UNIQUEGROUP}
 
                         LHS and RHS specifies the input
-                        GROUP provides a list inputs, no GROUP provides them one at a team
-                        Use ONLY to get inputs which have no match
+                        The GROUP suffix combines items into a list
+                        The ONLY suffix finds elements which have no match
+
                         Use DUPE to get inputs which have duplicates (not valid with rhs)
                         Use UNIQUE to get inputs which are unique  (not valid with rhs)
 '''

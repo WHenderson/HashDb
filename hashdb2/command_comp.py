@@ -99,6 +99,83 @@ def attach_side(engine, side, dbpath, update, subpath):
 
         return rwFiles, roFiles
 
+def create_side(dbpath, update, subpath):
+    db = rw = 'main'
+    ro = 'ro'
+
+    if dbpath:
+        exists = os.path.exists(dbpath)
+
+        if update or not exists:
+
+            if not exists:
+                touch(dbpath)
+
+            engine = create(dbpath)
+
+            rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
+
+            sel = rwFiles.select()
+
+            if subpath and exists:
+                # rw = actual database
+                # ro = view of lhsrw, restricted to LHSPATH
+                sel = sel.where(is_subpath(rwFiles.c.path, subpath))
+            else:
+                # rw = actual database, created from scratch if necessary
+                # ro = view of lhsrw
+                pass
+
+            if subpath:
+                command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True }, engine=engine, schema=rw)
+
+            #engine.execute(CreateView(ro, sel))
+            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            roFiles = sel.cte(ro)
+            rhsroFiles = sel.cte('rhsro')
+
+            return engine, rwFiles, roFiles, rhsroFiles
+        else:
+            engine = create(dbpath)
+
+            dbFiles = Table('Files', MetaData(schema=db), autoload=True, autoload_with=engine)
+
+            sel = dbFiles.select()
+
+            if subpath:
+                # db = actual database
+                # rw = None
+                # ro = LHSPATH restricted view of lhsdb
+                sel = sel.where(is_subpath(dbFiles.c.path, subpath))
+            else:
+                # db = actual database
+                # rw = None
+                # ro = view of lhsdb
+                pass
+
+            #engine.execute(CreateView(ro, sel))
+            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+            roFiles = sel.cte(ro)
+            rhsroFiles = sel.cte('rhsro')
+
+            return engine, None, roFiles, rhsroFiles
+    else:
+        # rw = fresh memory database
+        # ro = view f lhsrw
+
+        engine = create(None)
+        create_schema(engine, rw)
+        rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
+
+        #engine.execute(CreateView(ro, rwFiles.select()))
+        #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
+        roFiles = rwFiles.select().cte(ro)
+        rhsroFiles = rwFiles.select().cte('rhsro')
+
+        if subpath:
+            command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
+
+        return engine, rwFiles, roFiles, rhsroFiles
 
 def command_comp(arguments, fcapture=None):
 
@@ -117,6 +194,14 @@ def command_comp(arguments, fcapture=None):
 
     if arguments['--rhs-update'] and arguments['--rhs-path']:
         arguments['--rhs-path'] = os.path.realpath(arguments['--rhs-path'])
+
+    haslhs = arguments['--lhs-path'] or arguments['--lhs-db']
+    hasrhs = arguments['--rhs-path'] or arguments['--rhs-db']
+
+    if (haslhs and hasrhs) or not arguments['--lhs-db']:
+        attach = True
+    else:
+        attach = False
 
     def match(sel, lhs, rhs, complete=True):
         if arguments['--size']:
@@ -151,21 +236,21 @@ def command_comp(arguments, fcapture=None):
 
     # ToDo: Add tests for each combination
     args = set(chain(*(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])))
-    if args == {'{LHS}'}:
+    if haslhs and hasrhs and args == {'{LHS}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS')])
             sel = match(sel, lhs, rhs)
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHS}', '{RHS}'}:
+    elif haslhs and hasrhs and args == {'{LHS}', '{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS'), rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
             sel = sel.order_by(lhs.c.path).order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHS}', '{RHSGROUP}'}:
+    elif haslhs and hasrhs and args == {'{LHS}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS'), func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
@@ -173,7 +258,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHSGROUP}'}:
+    elif haslhs and hasrhs and args == {'{LHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
             sel = match(sel, lhs, rhs)
@@ -181,7 +266,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHSGROUP}', '{RHS}'}:
+    elif haslhs and hasrhs and args == {'{LHSGROUP}', '{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
@@ -189,7 +274,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHSGROUP}', '{RHSGROUP}'}:
+    elif haslhs and hasrhs and args == {'{LHSGROUP}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path.distinct()).label('LHSGROUP'), func.group_concat(rhs.c.path.distinct()).label('RHSGROUP')])
             #ToDo: fix the ordering of the group items and the overall result set
@@ -219,7 +304,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHSONLY}'}:
+    elif haslhs and hasrhs and args == {'{LHSONLY}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHSONLY')])
             sel = sel.where(~exists(
@@ -228,7 +313,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{LHSONLYGROUP}'}:
+    elif haslhs and hasrhs and args == {'{LHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSONLYGROUP')])
             sel = sel.where(~exists(
@@ -237,14 +322,14 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{RHS}'}:
+    elif haslhs and hasrhs and args == {'{RHS}'}:
         def get_sel(lhs, rhs):
             sel = select([rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{RHSGROUP}'}:
+    elif haslhs and hasrhs and args == {'{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
@@ -252,7 +337,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{RHSONLY}'}:
+    elif haslhs and hasrhs and args == {'{RHSONLY}'}:
         def get_sel(lhs, rhs):
             sel = select([rhs.c.path.label('RHSONLY')])
             sel = sel.where(~exists(
@@ -261,7 +346,7 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{RHSONLYGROUP}'}:
+    elif haslhs and hasrhs and args == {'{RHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(rhs.c.path).label('RHSONLYGROUP')])
             sel = sel.where(~exists(
@@ -270,22 +355,75 @@ def command_comp(arguments, fcapture=None):
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
-    elif args == {'{DUPE}'}:
-        # ToDo: Work out how to handle dupe/unique
-        raise DocoptExit('DUPE not implemented yet')
-    elif args == {'{DUPEGROUP}'}:
-        raise DocoptExit('DUPEGROUP not implemented yet')
-    elif args == {'{UNIQUE}'}:
-        raise DocoptExit('UNIQUE not implemented yet')
-    elif args == {'{UNIQUEGROUP}'}:
-        raise DocoptExit('UNIQUEGROUP not implemented yet')
+    elif haslhs and not hasrhs and args == {'{DUPE}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('DUPE')])
+            sel = match(sel, lhs, rhs)
+            sel = sel.order_by(lhs.c.path)
+            sel = sel.distinct()
+            return sel
+    elif haslhs and not hasrhs and args == {'{DUPEGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path.distinct()).label('DUPEGROUP')])
+            sel = match(sel, lhs, rhs)
+
+            if arguments['--size']:
+                sel = sel.group_by(lhs.c.size).order_by(lhs.c.size)
+
+            if arguments['--time']:
+                sel = sel.group_by(lhs.c.time).order_by(lhs.c.time)
+
+            if arguments['--extension']:
+                sel = sel.group_by(lhs.c.extension).order_by(lhs.c.extension)
+
+            if arguments['--basename']:
+                sel = sel.group_by(lhs.c.basename).order_by(lhs.c.basename)
+
+            if arguments['--quick']:
+                sel = sel.group_by(lhs.c.hash_quick).order_by(lhs.c.hash_quick)
+
+            if arguments['--full']:
+                sel = sel.group_by(lhs.c.hash_total).order_by(lhs.c.hash_total)
+
+            sel = sel.order_by(lhs.c.path)
+            sel = sel.order_by(rhs.c.path)
+            sel = sel.distinct()
+            return sel
+    elif haslhs and not hasrhs and args == {'{UNIQUE}'}:
+        def get_sel(lhs, rhs):
+            sel = select([lhs.c.path.label('UNIQUE')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
+            ))
+            sel = sel.order_by(lhs.c.path)
+            sel = sel.distinct()
+            return sel
+    elif haslhs and not hasrhs and args == {'{UNIQUEGROUP}'}:
+        def get_sel(lhs, rhs):
+            sel = select([func.group_concat(lhs.c.path).label('UNIQUEGROUP')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
+            ))
+            sel = sel.order_by(lhs.c.path)
+            sel = sel.distinct()
+            return sel
     else:
         raise DocoptExit('COMMAND does not contain a valid combination of special arguments')
 
-    engine = create(None)
+    lhsrwFiles, lhsroFiles = None, None
+    rhsrwFiles, rhsroFiles = None, None
+
+    if attach:
+        engine = create(None)
+    else:
+        engine, lhsrwFiles, lhsroFiles, rhsroFiles = create_side(arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
+
     with engine_dispose(engine):
-        lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
-        rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
+        if attach:
+            if haslhs:
+                lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
+            if hasrhs:
+                rhsrwFiles, rhsroFiles = attach_side(engine, 'rhs', arguments['--rhs-db'], arguments['--rhs-update'], arguments['--rhs-path'])
 
         if not arguments['--none'] and (lhsrwFiles != None or rhsrwFiles != None):
             # Do a preliminary comparison
@@ -304,6 +442,9 @@ def command_comp(arguments, fcapture=None):
             conn = engine.connect()
 
             def updaterw(ro,rw,sel):
+                if rw is None:
+                    return
+
                 for result in conn.execute(sel):
                     file = conn.execute(rw.select().where(rw.c.path == result.path)).fetchone()
                     try:

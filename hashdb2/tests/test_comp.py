@@ -45,7 +45,26 @@ structure_standard = [
 ]
 
 class TestComp(TestCase):
-    def _execute_comp(self, args):
+    def _execute_comp_all(self, args):
+        with generate_structure(structure_standard) as root:
+            dbLhs = os.path.join(root, 'all.db')
+
+            results = []
+            def capture(result):
+                results.append(result)
+
+            print('args:', ' '.join(args))
+
+            main(['comp', '--lhs-db', dbLhs, '--lhs-path', root, '--'] + args, fcapture=capture)
+
+            for result in results:
+                for i in range(len(result)):
+                    result[i] = result[i].replace(root, '').replace('\\', '/')
+                print(str(result) + ',')
+
+            return results
+
+    def _execute_comp_lhs_rhs(self, args):
         with generate_structure(structure_standard) as root:
             dbLhs = os.path.join(root, 'lhs.db')
             dbRhs = os.path.join(root, 'rhs.db')
@@ -69,7 +88,7 @@ class TestComp(TestCase):
 
     def test_lhs(self):
         self.assertEqual(
-            self._execute_comp(['{LHS}']),
+            self._execute_comp_lhs_rhs(['{LHS}']),
             [
                 ['/lhs/a-folder/a0-file'],
                 ['/lhs/a0-file-no-extension'],
@@ -83,7 +102,7 @@ class TestComp(TestCase):
 
     def test_lhs_rhs(self):
         self.assertEqual(
-            self._execute_comp(['{LHS}', '{RHS}']),
+            self._execute_comp_lhs_rhs(['{LHS}', '{RHS}']),
             [
                 ['/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file'],
                 ['/lhs/a-folder/a0-file', '/rhs/a0-file-no-extension'],
@@ -99,7 +118,7 @@ class TestComp(TestCase):
 
     def test_lhs_rhsgroup(self):
         self.assertEqual(
-            self._execute_comp(['{LHS}', '{RHSGROUP}']),
+            self._execute_comp_lhs_rhs(['{LHS}', '{RHSGROUP}']),
             [
                 ['/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
                 ['/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
@@ -113,7 +132,7 @@ class TestComp(TestCase):
 
     def test_lhsgroup(self):
         self.assertEqual(
-            self._execute_comp(['{LHSGROUP}']),
+            self._execute_comp_lhs_rhs(['{LHSGROUP}']),
             [
                 ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension'],
                 ['/lhs/a0-file-with.extension'],
@@ -126,7 +145,7 @@ class TestComp(TestCase):
 
     def test_lhsgroup_rhs(self):
         self.assertEqual(
-            self._execute_comp(['{LHSGROUP}', '{RHS}']),
+            self._execute_comp_lhs_rhs(['{LHSGROUP}', '{RHS}']),
             [
                 ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file'],
                 ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension', '/rhs/a0-file-no-extension'],
@@ -140,7 +159,7 @@ class TestComp(TestCase):
 
     def test_lhsgroup_rhsgroup(self):
         self.assertEqual(
-            self._execute_comp(['{LHSGROUP}', '{RHSGROUP}']),
+            self._execute_comp_lhs_rhs(['{LHSGROUP}', '{RHSGROUP}']),
             [
                 ['/lhs/a0-file-no-extension,/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
                 ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
@@ -153,7 +172,7 @@ class TestComp(TestCase):
 
     def test_lhsonly(self):
         self.assertEqual(
-            self._execute_comp(['{LHSONLY}']),
+            self._execute_comp_lhs_rhs(['{LHSONLY}']),
             [
                 ['/lhs/a-unique-file'],
                 ['/lhs/another-unique-file'],
@@ -162,7 +181,7 @@ class TestComp(TestCase):
 
     def test_lhsonlygroup(self):
         self.assertEqual(
-            self._execute_comp(['{LHSONLYGROUP}']),
+            self._execute_comp_lhs_rhs(['{LHSONLYGROUP}']),
             [
                 ['/lhs/a-unique-file,/lhs/another-unique-file'],
             ]
@@ -170,7 +189,7 @@ class TestComp(TestCase):
 
     def test_rhs(self):
         self.assertEqual(
-            self._execute_comp(['{RHS}']),
+            self._execute_comp_lhs_rhs(['{RHS}']),
             [
                 ['/rhs/a-folder/a0-file'],
                 ['/rhs/a0-file-no-extension'],
@@ -184,7 +203,7 @@ class TestComp(TestCase):
 
     def test_rhsgroup(self):
         self.assertEqual(
-            self._execute_comp(['{RHSGROUP}']),
+            self._execute_comp_lhs_rhs(['{RHSGROUP}']),
             [
                 ['/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
                 ['/rhs/a0-file-with.extension'],
@@ -197,7 +216,7 @@ class TestComp(TestCase):
 
     def test_rhsonly(self):
         self.assertEqual(
-            self._execute_comp(['{RHSONLY}']),
+            self._execute_comp_lhs_rhs(['{RHSONLY}']),
             [
                 ['/rhs/a-unique-file'],
                 ['/rhs/another-unique-file'],
@@ -206,12 +225,63 @@ class TestComp(TestCase):
 
     def test_rhsonlygroup(self):
         self.assertEqual(
-            self._execute_comp(['{RHSONLYGROUP}']),
+            self._execute_comp_lhs_rhs(['{RHSONLYGROUP}']),
             [
                 ['/rhs/a-unique-file,/rhs/another-unique-file'],
             ]
         )
 
+    def test_dupe(self):
+        self.assertEqual(
+            self._execute_comp_all(['{DUPE}']),
+            [
+                ['/lhs/a-folder/a0-file'],
+                ['/lhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls'],
+                ['/rhs/a-folder/a0-file'],
+                ['/rhs/a0-file-no-extension'],
+                ['/rhs/a0-file-with.extension'],
+                ['/rhs/a1-file-with--64k-content'],
+                ['/rhs/a2-file-with-128k-content'],
+                ['/rhs/a3-file-with-192k-content'],
+                ['/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_dupegroup(self):
+        self.assertEqual(
+            self._execute_comp_all(['{DUPEGROUP}']),
+            [
+                ['/lhs/a0-file-no-extension,/lhs/a-folder/a0-file,/rhs/a0-file-no-extension,/rhs/a-folder/a0-file'],
+                ['/lhs/a0-file-with.extension,/rhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content,/rhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content,/rhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content,/rhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls,/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_unique(self):
+        self.assertEqual(
+            self._execute_comp_all(['{UNIQUE}']),
+            [
+                ['/all.db'],
+                ['/lhs/a-unique-file'],
+                ['/lhs/another-unique-file'],
+                ['/rhs/a-unique-file'],
+                ['/rhs/another-unique-file'],
+            ]
+        )
 
 
-
+    def test_uniquegroup(self):
+        self.assertEqual(
+            self._execute_comp_all(['{UNIQUEGROUP}']),
+            [
+                ['/all.db,/lhs/a-unique-file,/lhs/another-unique-file,/rhs/a-unique-file,/rhs/another-unique-file'],
+            ]
+        )

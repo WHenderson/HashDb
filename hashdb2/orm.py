@@ -3,14 +3,17 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import Executable, ClauseElement
 #from collections import namedtuple
 from contextlib import contextmanager
+import sqlite3
 
 #File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-def create(filename, echo=False):
+def create(filename, echo=False, readonly=False):
     if filename is None:
         return create_engine('sqlite://', echo=echo)
-    else:
+    elif not readonly:
         return create_engine('sqlite:///%s' % (filename,), echo=echo)
+    else:
+        return create_engine('sqlite:///', echo=echo, engine_kwargs={'creator': sqlite3.connect('file:' + db_file + '?mode=ro', uri=True)})
 
 def touch(filename):
     engine = create(filename)
