@@ -10,38 +10,42 @@ from hashdb2.hash import HASHBLOCK_QUICK
 
 structure_standard = [
     FileInfo('lhs', None, None, None, None),
-    FileInfo('lhs/a-file-no-extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
-    FileInfo('lhs/a-file-with.extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
-    FileInfo('lhs/a-file-with--64k-content', b'[ start....... ]' * (64 * 1024 // 16), 0, '64f1d479c57ad4c63ac0fe548fefc16c', '64f1d479c57ad4c63ac0fe548fefc16c'),
-    FileInfo('lhs/a-file-with-128k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16), 0, 'be8d3f4b5e419026509beb8b0aa14517', 'be8d3f4b5e419026509beb8b0aa14517'),
-    FileInfo('lhs/a-file-with-192k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16) + b'[ .........end ]' * (64 * 1024 // 16), 0, 'd77e9be5c1ecf730da5afaedd3d3048a', 'd77e9be5c1ecf730da5afaedd3d3048a'),
-    FileInfo('lhs/a-file-with-200k-nulls', b'\0' * 200 * 1024, 0, 'ef2e0d18474b2151ef5876b1e89c2f1d', 'c522c1db31cc1f90b5d21992fd30e2ab'),
+    FileInfo('lhs/a0-file-no-extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('lhs/a0-file-with.extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('lhs/a1-file-with--64k-content', b'[ start....... ]' * (64 * 1024 // 16), 0, '64f1d479c57ad4c63ac0fe548fefc16c', '64f1d479c57ad4c63ac0fe548fefc16c'),
+    FileInfo('lhs/a2-file-with-128k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16), 0, 'be8d3f4b5e419026509beb8b0aa14517', 'be8d3f4b5e419026509beb8b0aa14517'),
+    FileInfo('lhs/a3-file-with-192k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16) + b'[ .........end ]' * (64 * 1024 // 16), 0, 'd77e9be5c1ecf730da5afaedd3d3048a', 'd77e9be5c1ecf730da5afaedd3d3048a'),
+    FileInfo('lhs/a4-file-with-200k-nulls', b'\0' * 200 * 1024, 0, 'ef2e0d18474b2151ef5876b1e89c2f1d', 'c522c1db31cc1f90b5d21992fd30e2ab'),
     FileInfo('lhs/an-empty-folder', None, None, None, None),
     FileInfo('lhs/a-folder', None, None, None, None),
-    FileInfo('lhs/a-folder/a-file', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('lhs/a-folder/a0-file', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
     FileInfo('lhs/a-link-to-a-file', 'inputs/a-folder/a-file', 0, None, None),
     FileInfo('lhs/a-link-to-a-folder', 'inputs/a-folder/', 0, None, None),
     FileInfo('lhs/a-bad-file-link', 'inputs/file-does-not-exist', 0, None, None),
     FileInfo('lhs/a-bad-folder-link', 'inputs/folder-does-not-exist/', 0, None, None),
+    FileInfo('lhs/a-unique-file', b'lhs/a-unique-file', 0, None, None),
+    FileInfo('lhs/another-unique-file', b'lhs/another-unique-file', 0, None, None),
 
     FileInfo('rhs', None, None, None, None),
-    FileInfo('rhs/a-file-no-extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
-    FileInfo('rhs/a-file-with.extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
-    FileInfo('rhs/a-file-with--64k-content', b'[ start....... ]' * (64 * 1024 // 16), 0, '64f1d479c57ad4c63ac0fe548fefc16c', '64f1d479c57ad4c63ac0fe548fefc16c'),
-    FileInfo('rhs/a-file-with-128k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16), 0, 'be8d3f4b5e419026509beb8b0aa14517', 'be8d3f4b5e419026509beb8b0aa14517'),
-    FileInfo('rhs/a-file-with-192k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16) + b'[ .........end ]' * (64 * 1024 // 16), 0, 'd77e9be5c1ecf730da5afaedd3d3048a', 'd77e9be5c1ecf730da5afaedd3d3048a'),
-    FileInfo('rhs/a-file-with-200k-nulls', b'\0' * 200 * 1024, 0, 'ef2e0d18474b2151ef5876b1e89c2f1d', 'c522c1db31cc1f90b5d21992fd30e2ab'),
+    FileInfo('rhs/a0-file-no-extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('rhs/a0-file-with.extension', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('rhs/a1-file-with--64k-content', b'[ start....... ]' * (64 * 1024 // 16), 0, '64f1d479c57ad4c63ac0fe548fefc16c', '64f1d479c57ad4c63ac0fe548fefc16c'),
+    FileInfo('rhs/a2-file-with-128k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16), 0, 'be8d3f4b5e419026509beb8b0aa14517', 'be8d3f4b5e419026509beb8b0aa14517'),
+    FileInfo('rhs/a3-file-with-192k-content', b'[ start....... ]' * (64 * 1024 // 16) + b'[ ...middle... ]' * (64 * 1024 // 16) + b'[ .........end ]' * (64 * 1024 // 16), 0, 'd77e9be5c1ecf730da5afaedd3d3048a', 'd77e9be5c1ecf730da5afaedd3d3048a'),
+    FileInfo('rhs/a4-file-with-200k-nulls', b'\0' * 200 * 1024, 0, 'ef2e0d18474b2151ef5876b1e89c2f1d', 'c522c1db31cc1f90b5d21992fd30e2ab'),
     FileInfo('rhs/an-empty-folder', None, None, None, None),
     FileInfo('rhs/a-folder', None, None, None, None),
-    FileInfo('rhs/a-folder/a-file', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
+    FileInfo('rhs/a-folder/a0-file', b'', 0, 'd41d8cd98f00b204e9800998ecf8427e', 'd41d8cd98f00b204e9800998ecf8427e'),
     FileInfo('rhs/a-link-to-a-file', 'inputs/a-folder/a-file', 0, None, None),
     FileInfo('rhs/a-link-to-a-folder', 'inputs/a-folder/', 0, None, None),
     FileInfo('rhs/a-bad-file-link', 'inputs/file-does-not-exist', 0, None, None),
     FileInfo('rhs/a-bad-folder-link', 'inputs/folder-does-not-exist/', 0, None, None),
+    FileInfo('rhs/a-unique-file', b'rhs/a-unique-file', 0, None, None),
+    FileInfo('rhs/another-unique-file', b'rhs/another-unique-file', 0, None, None),
 ]
 
 class TestComp(TestCase):
-    def test_structures(self):
+    def _execute_comp(self, args):
         with generate_structure(structure_standard) as root:
             dbLhs = os.path.join(root, 'lhs.db')
             dbRhs = os.path.join(root, 'rhs.db')
@@ -51,30 +55,163 @@ class TestComp(TestCase):
             def capture(result):
                 results.append(result)
 
-            for args in [
-                ['{LHS}'],
-                ['{LHS}', '{RHS}'],
-                ['{LHS}', '{RHSGROUP}'],
-                ['{LHSGROUP}'],
-                ['{LHSGROUP}', '{RHS}'],
-                ['{LHSGROUP}', '{RHSGROUP}'],
-                ['{LHSONLY}'],
-                ['{LHSONLYGROUP}'],
-                ['{RHS}'],
-                ['{RHSGROUP}'],
-                ['{RHSONLY}'],
-                ['{RHSONLYGROUP}']
-            ]:
-                print('args:', ' '.join(args))
 
-                main(['comp', '--lhs-db', dbLhs, '--lhs-path', os.path.join(root, 'lhs'), '--rhs-db', dbRhs, '--rhs-path', os.path.join(root, 'rhs'), '--'] + args, fcapture=capture)
+            print('args:', ' '.join(args))
 
-                for result in results:
-                    for i in range(len(result)):
-                        result[i] = result[i].replace(root, '').replace('\\', '/')
-                    print(result)
+            main(['comp', '--lhs-db', dbLhs, '--lhs-path', os.path.join(root, 'lhs'), '--rhs-db', dbRhs, '--rhs-path', os.path.join(root, 'rhs'), '--'] + args, fcapture=capture)
 
-                #print(results)
+            for result in results:
+                for i in range(len(result)):
+                    result[i] = result[i].replace(root, '').replace('\\', '/')
+                print(str(result) + ',')
+
+            return results
+
+    def test_lhs(self):
+        self.assertEqual(
+            self._execute_comp(['{LHS}']),
+            [
+                ['/lhs/a-folder/a0-file'],
+                ['/lhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhs_rhs(self):
+        self.assertEqual(
+            self._execute_comp(['{LHS}', '{RHS}']),
+            [
+                ['/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file'],
+                ['/lhs/a-folder/a0-file', '/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file'],
+                ['/lhs/a0-file-no-extension', '/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content', '/rhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content', '/rhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content', '/rhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls', '/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhs_rhsgroup(self):
+        self.assertEqual(
+            self._execute_comp(['{LHS}', '{RHSGROUP}']),
+            [
+                ['/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content', '/rhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content', '/rhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content', '/rhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls', '/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhsgroup(self):
+        self.assertEqual(
+            self._execute_comp(['{LHSGROUP}']),
+            [
+                ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhsgroup_rhs(self):
+        self.assertEqual(
+            self._execute_comp(['{LHSGROUP}', '{RHS}']),
+            [
+                ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file'],
+                ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension', '/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content', '/rhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content', '/rhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content', '/rhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls', '/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhsgroup_rhsgroup(self):
+        self.assertEqual(
+            self._execute_comp(['{LHSGROUP}', '{RHSGROUP}']),
+            [
+                ['/lhs/a0-file-no-extension,/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
+                ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
+                ['/lhs/a1-file-with--64k-content', '/rhs/a1-file-with--64k-content'],
+                ['/lhs/a2-file-with-128k-content', '/rhs/a2-file-with-128k-content'],
+                ['/lhs/a3-file-with-192k-content', '/rhs/a3-file-with-192k-content'],
+                ['/lhs/a4-file-with-200k-nulls', '/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_lhsonly(self):
+        self.assertEqual(
+            self._execute_comp(['{LHSONLY}']),
+            [
+                ['/lhs/a-unique-file'],
+                ['/lhs/another-unique-file'],
+            ]
+        )
+
+    def test_lhsonlygroup(self):
+        self.assertEqual(
+            self._execute_comp(['{LHSONLYGROUP}']),
+            [
+                ['/lhs/a-unique-file,/lhs/another-unique-file'],
+            ]
+        )
+
+    def test_rhs(self):
+        self.assertEqual(
+            self._execute_comp(['{RHS}']),
+            [
+                ['/rhs/a-folder/a0-file'],
+                ['/rhs/a0-file-no-extension'],
+                ['/rhs/a0-file-with.extension'],
+                ['/rhs/a1-file-with--64k-content'],
+                ['/rhs/a2-file-with-128k-content'],
+                ['/rhs/a3-file-with-192k-content'],
+                ['/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_rhsgroup(self):
+        self.assertEqual(
+            self._execute_comp(['{RHSGROUP}']),
+            [
+                ['/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
+                ['/rhs/a0-file-with.extension'],
+                ['/rhs/a1-file-with--64k-content'],
+                ['/rhs/a2-file-with-128k-content'],
+                ['/rhs/a3-file-with-192k-content'],
+                ['/rhs/a4-file-with-200k-nulls'],
+            ]
+        )
+
+    def test_rhsonly(self):
+        self.assertEqual(
+            self._execute_comp(['{RHSONLY}']),
+            [
+                ['/rhs/a-unique-file'],
+                ['/rhs/another-unique-file'],
+            ]
+        )
+
+    def test_rhsonlygroup(self):
+        self.assertEqual(
+            self._execute_comp(['{RHSONLYGROUP}']),
+            [
+                ['/rhs/a-unique-file,/rhs/another-unique-file'],
+            ]
+        )
+
 
 
 

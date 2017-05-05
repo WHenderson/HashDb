@@ -177,7 +177,9 @@ def command_comp(arguments, fcapture=None):
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
             sel = match(sel, lhs, rhs)
+            sel = sel.group_by(rhs.c.path)
             sel = sel.order_by(lhs.c.path)
+            sel = sel.distinct()
             return sel
     elif args == {'{LHSGROUP}', '{RHS}'}:
         def get_sel(lhs, rhs):
@@ -219,20 +221,21 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif args == {'{LHSONLY}'}:
         def get_sel(lhs, rhs):
-            sel = select([lhs.c.path.label('LHS')])
-            sel = sel.where(not exists(
-                match(select([rhs.c.path]), lhs, rhs)
+            sel = select([lhs.c.path.label('LHSONLY')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
             ))
             sel = sel.order_by(lhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{LHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
-            sel = sel.where(not exists(
-                match(select([rhs.c.path]), lhs, rhs)
+            sel = select([func.group_concat(lhs.c.path).label('LHSONLYGROUP')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
             ))
             sel = sel.order_by(lhs.c.path)
+            sel = sel.distinct()
             return sel
     elif args == {'{RHS}'}:
         def get_sel(lhs, rhs):
@@ -245,24 +248,27 @@ def command_comp(arguments, fcapture=None):
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
+            sel = sel.group_by(lhs.c.path)
             sel = sel.order_by(rhs.c.path)
+            sel = sel.distinct()
             return sel
     elif args == {'{RHSONLY}'}:
         def get_sel(lhs, rhs):
-            sel = select([rhs.c.path.label('RHS')])
-            sel = sel.where(not exists(
-                match(select([lhs.c.path]), lhs, rhs)
+            sel = select([rhs.c.path.label('RHSONLY')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
             ))
             sel = sel.order_by(rhs.c.path)
             sel = sel.distinct()
             return sel
     elif args == {'{RHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(rhs.c.path).label('LHSGROUP')])
-            sel = sel.where(not exists(
-                match(select([lhs.c.path]), lhs, rhs)
+            sel = select([func.group_concat(rhs.c.path).label('RHSONLYGROUP')])
+            sel = sel.where(~exists(
+                match(select(['*']), lhs, rhs)
             ))
             sel = sel.order_by(rhs.c.path)
+            sel = sel.distinct()
             return sel
     elif args == {'{DUPE}'}:
         # ToDo: Work out how to handle dupe/unique
