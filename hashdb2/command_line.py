@@ -74,7 +74,7 @@ def main(argv=None, fcapture=None):
 
     global __doc__
     arguments = docopt(__doc__, argv[1:], version='HashDb2 ' + version)
-    #print(arguments)
+    print(arguments)
 
     if arguments['hash']:
         from .command_hash import command_hash
