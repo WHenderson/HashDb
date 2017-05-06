@@ -478,6 +478,10 @@ def command_comp(arguments, fcapture=None):
 
         conn = engine.connect()
         try:
+            print('sel all')
+            for result in conn.execute('select * from Files order by path'):
+                print(result)
+            print('match')
             for result in conn.execute(sel):
                 cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
 
@@ -487,6 +491,7 @@ def command_comp(arguments, fcapture=None):
                     print(cmd)
                     #ToDo: Execute command
         except Exception as ex:
+            print('ex:', ex)
             raise ex
         finally:
             conn.close()
