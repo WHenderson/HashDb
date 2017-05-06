@@ -7,7 +7,7 @@ import sqlite3
 
 #File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
 
-def create(filename, echo=False, readonly=False):
+def create(filename, echo=True, readonly=False):
     if filename is None:
         return create_engine('sqlite://', echo=echo)
     elif not readonly:
