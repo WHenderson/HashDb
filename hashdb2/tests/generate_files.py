@@ -58,24 +58,19 @@ structures = {
 @contextmanager
 def generate_structure(files):
     original_cwd = os.getcwd()
-    print('cwd:', original_cwd)
     with TemporaryDirectory() as root:
-        print('chdir:', root)
         os.chdir(root)
         try:
 
             for file in files:
                 targetPath = os.path.join(root, file.path)
                 if file.data is None:
-                    print('mkdir:', targetPath)
                     os.mkdir(targetPath)
                     continue
                 elif isinstance(file.data, bytes) or isinstance(file.data, bytearray):
-                    print('write:', targetPath)
                     with open(targetPath, 'wb') as fp:
                         fp.write(file.data)
 
-                    print('utime:', targetPath)
                     try:
                         os.utime(targetPath, ns=(file.time, file.time), follow_symlinks=False)
                     except NotImplementedError:
@@ -87,17 +82,12 @@ def generate_structure(files):
                     if is_dir:
                         sourcePath = sourcePath[:-1]
                     #print('%s : %s', targetPath, os.path.relpath(sourcePath, targetPath))
-                    print('symlink:', os.path.relpath(sourcePath, os.path.dirname(targetPath)), targetPath, is_dir)
                     os.symlink(os.path.relpath(sourcePath, os.path.dirname(targetPath)), targetPath, is_dir)
 
 
-            print('yield:', root)
             yield root
 
         except Exception as ex:
             raise ex
         finally:
-            print('chdir:', original_cwd)
             os.chdir(original_cwd)
-
-

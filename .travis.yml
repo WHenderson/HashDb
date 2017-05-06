@@ -10,4 +10,3 @@ script:
   - nosetests --with-coverage --cover-package=hashdb2
 after_success:
   - coveralls
-

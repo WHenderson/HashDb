@@ -74,18 +74,14 @@ def main(argv=None, fcapture=None):
 
     global __doc__
     arguments = docopt(__doc__, argv[1:], version='HashDb2 ' + version)
-    print(arguments)
+    #print(arguments)
 
-    try:
-        if arguments['hash']:
-            from .command_hash import command_hash
-            command_hash(arguments)
-        elif arguments['comp']:
-            from .command_comp import command_comp
-            command_comp(arguments, fcapture=fcapture)
-    except Exception as ex:
-        print('ex:', ex)
-        raise ex
+    if arguments['hash']:
+        from .command_hash import command_hash
+        command_hash(arguments)
+    elif arguments['comp']:
+        from .command_comp import command_comp
+        command_comp(arguments, fcapture=fcapture)
 
 if __name__ == '__main__':
     main()

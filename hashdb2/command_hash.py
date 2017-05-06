@@ -24,17 +24,13 @@ def command_hash(arguments, engine=None, schema='main'):
                 badFiles = set()
 
                 for inputFile in inputFiles:
-                    print('inputFile:', inputFile)
                     try:
-                        print('stat')
                         stat = inputFile.stat(follow_symlinks=False)
-                    except Exception as ex:
-                        print(ex)
+                    except Exception:
                         badFiles.add(inputFile)
                         continue
 
                     if not S_ISREG(stat.st_mode):
-                        print('!S_ISREG')
                         badFiles.add(inputFile)
                         continue
 

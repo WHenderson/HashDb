@@ -45,19 +45,17 @@ def attach_side(engine, side, dbpath, update, subpath):
 
             if subpath and exists:
                 # rw = actual database
-                # ro = view of lhsrw, restricted to LHSPATH
+                # ro = subquery of lhsrw, restricted to LHSPATH
                 sel = sel.where(is_subpath(rwFiles.c.path, subpath))
             else:
                 # rw = actual database, created from scratch if necessary
-                # ro = view of lhsrw
+                # ro = subquery of lhsrw
                 pass
 
             if subpath:
                 command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True }, engine=engine, schema=rw)
 
-            #engine.execute(CreateView(ro, sel))
-            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.alias(ro) #sel.cte(ro)
+            roFiles = sel.alias(ro)
 
             return rwFiles, roFiles
         else:
@@ -69,30 +67,26 @@ def attach_side(engine, side, dbpath, update, subpath):
             if subpath:
                 # db = actual database
                 # rw = None
-                # ro = LHSPATH restricted view of lhsdb
+                # ro = LHSPATH restricted subquery of lhsdb
                 sel = sel.where(is_subpath(dbFiles.c.path, subpath))
             else:
                 # db = actual database
                 # rw = None
-                # ro = view of lhsdb
+                # ro = subquery of lhsdb
                 pass
 
-            #engine.execute(CreateView(ro, sel))
-            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.alias(ro) #.cte(ro)
+            roFiles = sel.alias(ro)
 
             return None, roFiles
     else:
         # rw = fresh memory database
-        # ro = view f lhsrw
+        # ro = subquery f lhsrw
 
         attach(engine, rw)
         create_schema(engine, rw)
         rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
 
-        #engine.execute(CreateView(ro, rwFiles.select()))
-        #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-        roFiles = rwFiles.select().alias(ro) #.cte(ro)
+        roFiles = rwFiles.select().alias(ro)
 
         if subpath:
             command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
@@ -119,20 +113,18 @@ def create_side(dbpath, update, subpath):
 
             if subpath and exists:
                 # rw = actual database
-                # ro = view of lhsrw, restricted to LHSPATH
+                # ro = subquery of lhsrw, restricted to LHSPATH
                 sel = sel.where(is_subpath(rwFiles.c.path, subpath))
             else:
                 # rw = actual database, created from scratch if necessary
-                # ro = view of lhsrw
+                # ro = subquery of lhsrw
                 pass
 
             if subpath:
                 command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True }, engine=engine, schema=rw)
 
-            #engine.execute(CreateView(ro, sel))
-            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.alias(ro) #.cte(ro)
-            rhsroFiles = sel.alias('rhsro') #.cte('rhsro')
+            roFiles = sel.alias(ro)
+            rhsroFiles = sel.alias('rhsro')
 
             return engine, rwFiles, roFiles, rhsroFiles
         else:
@@ -145,32 +137,28 @@ def create_side(dbpath, update, subpath):
             if subpath:
                 # db = actual database
                 # rw = None
-                # ro = LHSPATH restricted view of lhsdb
+                # ro = LHSPATH restricted subquery of lhsdb
                 sel = sel.where(is_subpath(dbFiles.c.path, subpath))
             else:
                 # db = actual database
                 # rw = None
-                # ro = view of lhsdb
+                # ro = subquery of lhsdb
                 pass
 
-            #engine.execute(CreateView(ro, sel))
-            #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.alias(ro) #.cte(ro)
-            rhsroFiles = sel.alias('rhsro') #.cte('rhsro')
+            roFiles = sel.alias(ro)
+            rhsroFiles = sel.alias('rhsro')
 
             return engine, None, roFiles, rhsroFiles
     else:
         # rw = fresh memory database
-        # ro = view f lhsrw
+        # ro = subquery of lhsrw
 
         engine = create(None)
         create_schema(engine, rw)
         rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
 
-        #engine.execute(CreateView(ro, rwFiles.select()))
-        #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-        roFiles = rwFiles.select().alias(ro) #.cte(ro)
-        rhsroFiles = rwFiles.select().alias('rhsro') #('rhsro')
+        roFiles = rwFiles.select().alias(ro)
+        rhsroFiles = rwFiles.select().alias('rhsro')
 
         if subpath:
             command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
@@ -413,16 +401,13 @@ def command_comp(arguments, fcapture=None):
     lhsrwFiles, lhsroFiles = None, None
     rhsrwFiles, rhsroFiles = None, None
 
-    print('create')
     if attach:
         engine = create(None)
     else:
         engine, lhsrwFiles, lhsroFiles, rhsroFiles = create_side(arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
 
-    print('with')
     with engine_dispose(engine):
         if attach:
-            print('attach')
             if haslhs:
                 lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
             if hasrhs:
@@ -449,20 +434,15 @@ def command_comp(arguments, fcapture=None):
                     return
 
                 for result in conn.execute(sel):
-                    print('update result:', result)
                     file = conn.execute(rw.select().where(rw.c.path == result.path)).fetchone()
                     try:
-                        print('stat')
                         stat = os.stat(result.path, follow_symlinks=False)
-                    except Exception as ex:
-                        print('ex:', ex)
+                    except Exception:
                         hash_quick, hash_total = None, None
                     else:
-                        print('hash')
                         hash_quick, hash_total = hashfile(result.path, stat, arguments['--quick'])
 
                     if hash_quick != None or hash_total != None:
-                        print('update meta data')
                         conn.execute(rw.update().where(rw.c.path == result.path).values(
                             size = stat.st_size,
                             time = stat.st_mtime_ns,
@@ -470,21 +450,15 @@ def command_comp(arguments, fcapture=None):
                             hash_total = hash_total
                         ))
                     else:
-                        print('delete')
                         conn.execute(rw.delete().where(rw.c.path == result.path))
             try:
-                print('update')
                 updaterw(lhsroFiles, lhsrwFiles, lhssel)
                 updaterw(rhsroFiles, rhsrwFiles, rhssel)
-            except Exception as ex:
-                print('ex:', ex)
-                raise ex
             finally:
                 conn.close()
 
         # Do the full comparison
 
-        print('gen sel')
         sel = get_sel(
             lhsroFiles if lhsrwFiles is None else lhsrwFiles,
             rhsroFiles if rhsrwFiles is None else rhsrwFiles
@@ -492,10 +466,6 @@ def command_comp(arguments, fcapture=None):
 
         conn = engine.connect()
         try:
-            print('sel all')
-            for result in conn.execute('select * from Files order by path'):
-                print(result)
-            print('match')
             for result in conn.execute(sel):
                 cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
 
@@ -505,7 +475,6 @@ def command_comp(arguments, fcapture=None):
                     print(cmd)
                     #ToDo: Execute command
         except Exception as ex:
-            print('ex:', ex)
             raise ex
         finally:
             conn.close()
