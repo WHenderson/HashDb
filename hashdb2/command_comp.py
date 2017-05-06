@@ -3,9 +3,12 @@ from .command_hash import command_hash
 from sqlalchemy import MetaData, Table, and_, or_, func, select, exists
 import os.path
 import re
+import subprocess
 from .hash import hashfile
 from docopt import DocoptExit
 from itertools import chain
+from .escape import escape_for_shell
+import sys
 
 def is_subpath(column, subpath):
     subpathdir = subpath
@@ -183,10 +186,13 @@ def command_comp(arguments, fcapture=None):
     if arguments['--rhs-update'] and arguments['--rhs-path']:
         arguments['--rhs-path'] = os.path.realpath(arguments['--rhs-path'])
 
+    if arguments['--dry-run']:
+        arguments['--echo'] = True
+
     haslhs = arguments['--lhs-path'] or arguments['--lhs-db']
     hasrhs = arguments['--rhs-path'] or arguments['--rhs-db']
 
-    if (haslhs and hasrhs) or not arguments['--lhs-db']:
+    if (haslhs and hasrhs):
         attach = True
     else:
         attach = False
@@ -469,12 +475,18 @@ def command_comp(arguments, fcapture=None):
             for result in conn.execute(sel):
                 cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
 
+                if arguments['--echo']:
+                    print(' '.join(escape_for_shell(arg) for arg in cmd))
+
                 if fcapture != None:
                     fcapture(cmd)
-                else:
-                    print(cmd)
-                    #ToDo: Execute command
-        except Exception as ex:
-            raise ex
+                elif not arguments['--dry-run']:
+                    try:
+                        subprocess.run(cmd, shell=True, check=True)
+                    except subprocess.CalledProcessError as ex:
+                        if arguments['--ignore-errors']:
+                            print(ex, file=sys.stderr)
+                        else:
+                            raise ex
         finally:
             conn.close()
