@@ -17,6 +17,7 @@ def create(filename, echo=False, readonly=False):
 
 def touch(filename):
     engine = create(filename)
+    print('sqlite version:', engine.pool._dialect.dbapi.sqlite_version_info)
     create_schema(engine)
     engine.dispose()
 
