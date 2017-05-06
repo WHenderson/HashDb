@@ -24,13 +24,17 @@ def command_hash(arguments, engine=None, schema='main'):
                 badFiles = set()
 
                 for inputFile in inputFiles:
+                    print('inputFile:', inputFile)
                     try:
+                        print('stat')
                         stat = inputFile.stat(follow_symlinks=False)
-                    except Exception:
+                    except Exception as ex:
+                        print(ex)
                         badFiles.add(inputFile)
                         continue
 
                     if not S_ISREG(stat.st_mode):
+                        print('!S_ISREG')
                         badFiles.add(inputFile)
                         continue
 
@@ -67,22 +71,26 @@ def command_hash(arguments, engine=None, schema='main'):
                             hash_total=hash_total
                         ))
 
-                # Are we only updating one file?
+                # Are we only updating multiple files?
+                # Note: When a single file update is manually requested, don't do deletes
                 if not (len(inputFiles) == 1 and inputFiles[0].path == input):
-                    # Delete unwanted files/folders
+                    # Delete everything under root which wasn't found by the walk
+
                     basePath = os.path.join(inputRoot, '')
 
                     sql = Files.delete()
                     sql = sql.where(func.substr(Files.c.path, 1, len(basePath)) == basePath)
 
+                    # delete any folders not found by the walk
                     if len(inputFolders) != 0:
                         sql = sql.where(and_(*(
                             func.substr(Files.c.path, 1, len(os.path.join(inputFolder.path, ''))) != os.path.join(inputFolder.path, '') for inputFolder in inputFolders
                         )))
 
-                    unwantedFiles = [file for file in inputFiles if file not in badFiles]
-                    if len(unwantedFiles) != 0:
-                        sql = sql.where(Files.c.path.notin_([unwantedFile.path for unwantedFile in unwantedFiles]))
+                    # delete any files not found by the walk AND delete any files we couldn't hash
+                    wantedFiles = [file for file in inputFiles if file not in badFiles]
+                    if len(wantedFiles) != 0:
+                        sql = sql.where(Files.c.path.notin_([unwantedFile.path for unwantedFile in wantedFiles]))
 
                     conn.execute(sql)
                 elif len(badFiles) != 0:
