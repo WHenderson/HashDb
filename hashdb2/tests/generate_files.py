@@ -69,7 +69,5 @@ def generate_structure(files):
 
             yield root
 
-        except Exception as ex:
-            raise ex
         finally:
             os.chdir(original_cwd)
