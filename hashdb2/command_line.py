@@ -21,7 +21,7 @@ Options:
     -e, --extension       Compare using file extension
     -b, --basename        Compare using basename
     
-    -0, --not-empty       Skip files with 0 size
+    -0, --skip-empty      Skip empty files
     
     -c, --echo            Echo command before execution
     -i, --ignore-errors   Ignore errors when executing command
