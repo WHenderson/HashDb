@@ -12,11 +12,8 @@ after_success:
   - coveralls
 addons:
   apt:
-    sources:
-      - travis-ci/sqlite3
     packages:
       - sqlite3
 before_install:
-  - sudo apt-add-repository -y ppa:travis-ci/sqlite3
   - sudo apt-get -y update
   - sudo apt-get -y install sqlite3
