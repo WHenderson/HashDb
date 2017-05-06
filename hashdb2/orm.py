@@ -1,19 +1,13 @@
 from sqlalchemy import create_engine, Table, Column, Integer, Float, String, MetaData, ForeignKey
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import Executable, ClauseElement
-#from collections import namedtuple
 from contextlib import contextmanager
-import sqlite3
 
-#File = namedtuple('File', ('path', 'basename', 'extension', 'size', 'time', 'hash_quick', 'hash_total'))
-
-def create(filename, echo=False, readonly=False):
+def create(filename, echo=False):
     if filename is None:
         return create_engine('sqlite://', echo=echo)
-    elif not readonly:
-        return create_engine('sqlite:///%s' % (filename,), echo=echo)
     else:
-        return create_engine('sqlite:///', echo=echo, engine_kwargs={'creator': sqlite3.connect('file:' + db_file + '?mode=ro', uri=True)})
+        return create_engine('sqlite:///%s' % (filename,), echo=echo)
 
 def touch(filename):
     engine = create(filename)
@@ -41,22 +35,9 @@ def create_schema(engine, schema='main'):
 
     return engine
 
-class CreateView(Executable, ClauseElement):
-    def __init__(self, name, select):
-        self.name = name
-        self.select = select
-
-@compiles(CreateView, 'sqlite')
-def visit_create_view(element, compiler, **kw):
-    return "CREATE TEMPORARY VIEW IF NOT EXISTS %s AS %s" % (
-         element.name,
-         compiler.process(element.select, literal_binds=True)
-     )
-
 @contextmanager
 def engine_dispose(engine):
     try:
         yield engine
-    except Exception as ex:
-        pass
-    engine.dispose()
+    finally:
+        engine.dispose()
