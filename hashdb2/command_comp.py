@@ -413,13 +413,16 @@ def command_comp(arguments, fcapture=None):
     lhsrwFiles, lhsroFiles = None, None
     rhsrwFiles, rhsroFiles = None, None
 
+    print('create')
     if attach:
         engine = create(None)
     else:
         engine, lhsrwFiles, lhsroFiles, rhsroFiles = create_side(arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
 
+    print('with')
     with engine_dispose(engine):
         if attach:
+            print('attach')
             if haslhs:
                 lhsrwFiles, lhsroFiles = attach_side(engine, 'lhs', arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
             if hasrhs:
@@ -464,6 +467,7 @@ def command_comp(arguments, fcapture=None):
                     else:
                         conn.execute(rw.delete().where(rw.c.path == result.path))
             try:
+                print('update')
                 updaterw(lhsroFiles, lhsrwFiles, lhssel)
                 updaterw(rhsroFiles, rhsrwFiles, rhssel)
             finally:
@@ -471,6 +475,7 @@ def command_comp(arguments, fcapture=None):
 
         # Do the full comparison
 
+        print('gen sel')
         sel = get_sel(
             lhsroFiles if lhsrwFiles is None else lhsrwFiles,
             rhsroFiles if rhsrwFiles is None else rhsrwFiles
