@@ -1,4 +1,4 @@
-from .orm import create, attach, create_schema, touch, CreateView, engine_dispose
+from .orm import create, attach, create_schema, touch, engine_dispose
 from .command_hash import command_hash
 from sqlalchemy import MetaData, Table, and_, or_, func, select, exists
 import os.path

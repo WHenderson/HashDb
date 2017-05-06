@@ -3,7 +3,7 @@ from unittest import TestCase
 from hashdb2.command_line import main
 from hashdb2.orm import create
 from tempfile import TemporaryDirectory
-from .generate_files import generate_files, generate_structure, structures
+from .generate_files import generate_structure, structures
 import os.path
 from sqlalchemy import MetaData, Table, func, and_
 from hashdb2.hash import HASHBLOCK_QUICK
