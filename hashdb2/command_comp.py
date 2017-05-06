@@ -57,7 +57,7 @@ def attach_side(engine, side, dbpath, update, subpath):
 
             #engine.execute(CreateView(ro, sel))
             #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.cte(ro)
+            roFiles = sel.alias(ro) #sel.cte(ro)
 
             return rwFiles, roFiles
         else:
@@ -79,7 +79,7 @@ def attach_side(engine, side, dbpath, update, subpath):
 
             #engine.execute(CreateView(ro, sel))
             #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.cte(ro)
+            roFiles = sel.alias(ro) #.cte(ro)
 
             return None, roFiles
     else:
@@ -92,7 +92,7 @@ def attach_side(engine, side, dbpath, update, subpath):
 
         #engine.execute(CreateView(ro, rwFiles.select()))
         #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-        roFiles = rwFiles.select().cte(ro)
+        roFiles = rwFiles.select().alias(ro) #.cte(ro)
 
         if subpath:
             command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
@@ -131,8 +131,8 @@ def create_side(dbpath, update, subpath):
 
             #engine.execute(CreateView(ro, sel))
             #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.cte(ro)
-            rhsroFiles = sel.cte('rhsro')
+            roFiles = sel.alias(ro) #.cte(ro)
+            rhsroFiles = sel.alias('rhsro') #.cte('rhsro')
 
             return engine, rwFiles, roFiles, rhsroFiles
         else:
@@ -155,8 +155,8 @@ def create_side(dbpath, update, subpath):
 
             #engine.execute(CreateView(ro, sel))
             #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-            roFiles = sel.cte(ro)
-            rhsroFiles = sel.cte('rhsro')
+            roFiles = sel.alias(ro) #.cte(ro)
+            rhsroFiles = sel.alias('rhsro') #.cte('rhsro')
 
             return engine, None, roFiles, rhsroFiles
     else:
@@ -169,8 +169,8 @@ def create_side(dbpath, update, subpath):
 
         #engine.execute(CreateView(ro, rwFiles.select()))
         #roFiles = Table(ro, MetaData(), autoload=True, autoload_with=engine)
-        roFiles = rwFiles.select().cte(ro)
-        rhsroFiles = rwFiles.select().cte('rhsro')
+        roFiles = rwFiles.select().alias(ro) #.cte(ro)
+        rhsroFiles = rwFiles.select().alias('rhsro') #('rhsro')
 
         if subpath:
             command_hash({'INPUTS': [subpath], '--quick': False, '--full': False, '--none': True}, engine=engine, schema=rw)
