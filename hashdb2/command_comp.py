@@ -449,15 +449,20 @@ def command_comp(arguments, fcapture=None):
                     return
 
                 for result in conn.execute(sel):
+                    print('update result:', result)
                     file = conn.execute(rw.select().where(rw.c.path == result.path)).fetchone()
                     try:
+                        print('stat')
                         stat = os.stat(result.path, follow_symlinks=False)
-                    except Exception:
+                    except Exception as ex:
+                        print('ex:', ex)
                         hash_quick, hash_total = None, None
                     else:
+                        print('hash')
                         hash_quick, hash_total = hashfile(result.path, stat, arguments['--quick'])
 
                     if hash_quick != None or hash_total != None:
+                        print('update meta data')
                         conn.execute(rw.update().where(rw.c.path == result.path).values(
                             size = stat.st_size,
                             time = stat.st_mtime_ns,
@@ -465,11 +470,15 @@ def command_comp(arguments, fcapture=None):
                             hash_total = hash_total
                         ))
                     else:
+                        print('delete')
                         conn.execute(rw.delete().where(rw.c.path == result.path))
             try:
                 print('update')
                 updaterw(lhsroFiles, lhsrwFiles, lhssel)
                 updaterw(rhsroFiles, rhsrwFiles, rhssel)
+            except Exception as ex:
+                print('ex:', ex)
+                raise ex
             finally:
                 conn.close()
 
