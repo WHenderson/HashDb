@@ -10,6 +10,12 @@ File meta data, including hash, can be cached on disk, allowing for quick repeat
 .. image:: https://travis-ci.org/WHenderson/HashDb.svg?branch=master
     :target: https://travis-ci.org/WHenderson/HashDb
 
+Installation
+============
+::
+
+    pip install hashdb2
+
 Command Line
 ============
 ::
