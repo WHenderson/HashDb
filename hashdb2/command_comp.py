@@ -180,10 +180,10 @@ def command_comp(arguments, fcapture=None):
     if not arguments['--none']:
         arguments['--size'] = True
 
-    if arguments['--lhs-update'] and arguments['--lhs-path']:
+    if (arguments['--lhs-update'] or not arguments['--lhs-db']) and arguments['--lhs-path']:
         arguments['--lhs-path'] = os.path.realpath(arguments['--lhs-path'])
 
-    if arguments['--rhs-update'] and arguments['--rhs-path']:
+    if (arguments['--rhs-update'] or not arguments['--rhs-db']) and arguments['--rhs-path']:
         arguments['--rhs-path'] = os.path.realpath(arguments['--rhs-path'])
 
     if arguments['--dry-run']:
@@ -210,6 +210,9 @@ def command_comp(arguments, fcapture=None):
         if arguments['--basename']:
             sel = sel.where(lhs.c.basename == rhs.c.basename)
 
+        if arguments['--skip-empty']:
+            sel = sel.where(lhs.c.size != 0)
+
         if complete:
             if arguments['--quick']:
                 sel = sel.where(and_(
@@ -223,12 +226,13 @@ def command_comp(arguments, fcapture=None):
                     lhs.c.hash_total != None
                 ))
 
-        # Not looking for the actual same file
-        sel = sel.where(lhs.c.path != rhs.c.path)
+        # Determine if we are on the same file system and ignore the same literal files
+        if not (arguments['--rhs-path'] or arguments['--rhs-db']) or \
+           (arguments['--rhs-update'] or not arguments['--rhs-db']) and arguments['--rhs-path']:
+            sel = sel.where(lhs.c.path != rhs.c.path)
 
         return sel
 
-    # ToDo: Add tests for each combination
     args = set(chain(*(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])))
     if haslhs and hasrhs and args == {'{LHS}'}:
         def get_sel(lhs, rhs):
@@ -271,9 +275,6 @@ def command_comp(arguments, fcapture=None):
     elif haslhs and hasrhs and args == {'{LHSGROUP}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
             sel = select([func.group_concat(lhs.c.path.distinct()).label('LHSGROUP'), func.group_concat(rhs.c.path.distinct()).label('RHSGROUP')])
-            #ToDo: fix the ordering of the group items and the overall result set
-            #sel = select([lhs.c.path.label('LHSGROUP'), rhs.c.path.label('RHSGROUP')])
-
             sel = match(sel, lhs, rhs)
 
             if arguments['--size']:
