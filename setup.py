@@ -9,7 +9,7 @@ setup(
     description='HashDb2 provides a simple method for executing commands based on matched files',
     long_description=readme(),
     classifiers=[
-        'Development Status :: 1 - Planning0',
+        'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
