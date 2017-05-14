@@ -8,6 +8,7 @@ from .hash import hashfile
 from docopt import DocoptExit
 from itertools import chain
 from .escape import escape_for_shell
+from filepath import FilePath
 import sys
 
 def is_subpath(column, subpath):
@@ -96,7 +97,7 @@ def attach_side(engine, side, dbpath, update, subpath):
 
         return rwFiles, roFiles
 
-def create_side(dbpath, update, subpath):
+def create_side(dbpath, update, subpath, separator):
     db = rw = 'main'
     ro = 'ro'
 
@@ -108,7 +109,7 @@ def create_side(dbpath, update, subpath):
             if not exists:
                 touch(dbpath)
 
-            engine = create(dbpath)
+            engine = create(dbpath, separator=separator)
 
             rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
 
@@ -131,7 +132,7 @@ def create_side(dbpath, update, subpath):
 
             return engine, rwFiles, roFiles, rhsroFiles
         else:
-            engine = create(dbpath)
+            engine = create(dbpath, separator=separator)
 
             dbFiles = Table('Files', MetaData(schema=db), autoload=True, autoload_with=engine)
 
@@ -156,7 +157,7 @@ def create_side(dbpath, update, subpath):
         # rw = fresh memory database
         # ro = subquery of lhsrw
 
-        engine = create(None)
+        engine = create(None, separator=separator)
         create_schema(engine, rw)
         rwFiles = Table('Files', MetaData(schema=rw), autoload=True, autoload_with=engine)
 
@@ -233,7 +234,9 @@ def command_comp(arguments, fcapture=None):
 
         return sel
 
-    args = set(chain(*(re.findall(r'\{[A-Z]+\}', arg) for arg in arguments['COMMAND'])))
+    argsSubstitutions = set(chain(*(re.findall(r'\{(LHS|RHS|LHSONLY|RHSONLY|DUPE|UNIQUE)(GROUP)?(?:\:(dirpath|basename|ext|name|drive|dirpathnodrive|fullpath))?\}', arg) for arg in arguments['COMMAND'])))
+    args = set(('{'+name+group+'}') for name,group,section in argsSubstitutions)
+
     if haslhs and hasrhs and args == {'{LHS}'}:
         def get_sel(lhs, rhs):
             sel = select([lhs.c.path.label('LHS')])
@@ -250,7 +253,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{LHS}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([lhs.c.path.label('LHS'), func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = select([lhs.c.path.label('LHS'), func.group_filepath(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
             sel = sel.group_by(lhs.c.path)
             sel = sel.order_by(lhs.c.path)
@@ -258,7 +261,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{LHSGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP')])
+            sel = select([func.group_filepath(lhs.c.path).label('LHSGROUP')])
             sel = match(sel, lhs, rhs)
             sel = sel.group_by(rhs.c.path)
             sel = sel.order_by(lhs.c.path)
@@ -266,7 +269,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{LHSGROUP}', '{RHS}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('LHSGROUP'), rhs.c.path.label('RHS')])
+            sel = select([func.group_filepath(lhs.c.path).label('LHSGROUP'), rhs.c.path.label('RHS')])
             sel = match(sel, lhs, rhs)
             sel = sel.group_by(rhs.c.path)
             sel = sel.order_by(rhs.c.path)
@@ -274,7 +277,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{LHSGROUP}', '{RHSGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path.distinct()).label('LHSGROUP'), func.group_concat(rhs.c.path.distinct()).label('RHSGROUP')])
+            sel = select([func.group_filepath(lhs.c.path).label('LHSGROUP'), func.group_filepath(rhs.c.path.distinct()).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
 
             if arguments['--size']:
@@ -310,7 +313,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{LHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('LHSONLYGROUP')])
+            sel = select([func.group_filepath(lhs.c.path).label('LHSONLYGROUP')])
             sel = sel.where(~exists(
                 match(select(['*']), lhs, rhs)
             ))
@@ -326,7 +329,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{RHSGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(rhs.c.path).label('RHSGROUP')])
+            sel = select([func.group_filepath(rhs.c.path).label('RHSGROUP')])
             sel = match(sel, lhs, rhs)
             sel = sel.group_by(lhs.c.path)
             sel = sel.order_by(rhs.c.path)
@@ -343,7 +346,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and hasrhs and args == {'{RHSONLYGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(rhs.c.path).label('RHSONLYGROUP')])
+            sel = select([func.group_filepath(rhs.c.path).label('RHSONLYGROUP')])
             sel = sel.where(~exists(
                 match(select(['*']), lhs, rhs)
             ))
@@ -359,7 +362,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and not hasrhs and args == {'{DUPEGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path.distinct()).label('DUPEGROUP')])
+            sel = select([func.group_filepath(lhs.c.path.distinct()).label('DUPEGROUP')])
             sel = match(sel, lhs, rhs)
 
             if arguments['--size']:
@@ -395,7 +398,7 @@ def command_comp(arguments, fcapture=None):
             return sel
     elif haslhs and not hasrhs and args == {'{UNIQUEGROUP}'}:
         def get_sel(lhs, rhs):
-            sel = select([func.group_concat(lhs.c.path).label('UNIQUEGROUP')])
+            sel = select([func.group_filepath(lhs.c.path).label('UNIQUEGROUP')])
             sel = sel.where(~exists(
                 match(select(['*']), lhs, rhs)
             ))
@@ -409,9 +412,9 @@ def command_comp(arguments, fcapture=None):
     rhsrwFiles, rhsroFiles = None, None
 
     if attach:
-        engine = create(None)
+        engine = create(None, separator=arguments['--separator'])
     else:
-        engine, lhsrwFiles, lhsroFiles, rhsroFiles = create_side(arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'])
+        engine, lhsrwFiles, lhsroFiles, rhsroFiles = create_side(arguments['--lhs-db'], arguments['--lhs-update'], arguments['--lhs-path'], separator=arguments['--separator'])
 
     with engine_dispose(engine):
         if attach:
@@ -474,7 +477,33 @@ def command_comp(arguments, fcapture=None):
         conn = engine.connect()
         try:
             for result in conn.execute(sel):
-                cmd = [re.sub(r'\{([A-Z]+)\}', (lambda match: result[match.group(1)]), arg) for arg in arguments['COMMAND']]
+                result = dict(result.items())
+
+                resultNormalized = {}
+                for name,group,section in argsSubstitutions:
+                    # simple
+                    if section == '':
+                        resultNormalized[name+group] = result[name + group]
+                    elif group == '':
+                        path = FilePath(result[name])
+                        resultNormalized[name + ':' + section] = getattr(path, section)
+                    else:
+                        paths = FilePath.splitpaths(result[name + group], arguments['--separator'])
+                        resultNormalized[name + group + ':' + section] = FilePath.joinpaths([getattr(p, section) for p in paths], arguments['--separator'])
+
+                result = resultNormalized
+
+                cmd = [
+                    re.sub(
+                        r'\{(%s)\}' % '|'.join(
+                            name + group + (':' + section if section != '' else '')
+                            for name,group,section in argsSubstitutions
+                        ),
+                        (lambda match: result[match.group(1)]),
+                        arg
+                    )
+                    for arg in arguments['COMMAND']
+                ]
 
                 if arguments['--echo']:
                     print(' '.join(escape_for_shell(arg) for arg in cmd))

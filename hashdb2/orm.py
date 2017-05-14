@@ -1,13 +1,16 @@
 from sqlalchemy import create_engine, Table, Column, Integer, Float, String, MetaData, ForeignKey
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import Executable, ClauseElement
 from contextlib import contextmanager
+import sqlite3
+from .filepath import gen_group_filepath, FilePath
 
-def create(filename, echo=False):
-    if filename is None:
-        return create_engine('sqlite://', echo=echo)
-    else:
-        return create_engine('sqlite:///%s' % (filename,), echo=echo)
+def create(filename, echo=False, separator=None):
+    def create_sqlite():
+        conn = sqlite3.connect(filename) if filename != None else sqlite3.connect(':memory:')
+        if separator != None:
+            conn.create_aggregate('group_filepath', 1, gen_group_filepath(separator))
+        return conn
+
+    return create_engine('sqlite://', echo=echo, creator=create_sqlite)
 
 def touch(filename):
     engine = create(filename)

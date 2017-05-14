@@ -5,7 +5,7 @@ def readme():
         return f.read()
 setup(
     name='hashdb2',
-    version='1.0',
+    version='1.1',
     description='HashDb2 provides a simple method for executing commands based on matched files',
     long_description=readme(),
     classifiers=[
