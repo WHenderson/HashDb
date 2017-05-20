@@ -80,22 +80,28 @@ Command Line
                               {UNIQUE}
                               {UNIQUEGROUP}
 
-                              LHS and RHS specifies the input
+                              {LHSPATH}
+                              {RHSPATH}
+
+                              LHS and RHS specifies the input and resolves to duplicates contained on the respective side.
                               The GROUP suffix combines items into a list using the separator specified by --separator.
                               The ONLY suffix finds elements which have no match
 
                               Use DUPE to get inputs which have duplicates (not valid with rhs)
                               Use UNIQUE to get inputs which are unique  (not valid with rhs)
 
+                              Use LHSPATH or RHSPATH to gain access to the path specified by --lhs-path and --rhs-path.
+                              These may also be used with the suffixed below.
+
                               In addition, each of the special names above can be suffixed with one of the following:
 
-                              dirpath         full folder path
-                              basename        full basename including extension
-                              ext             file extension (including the '.')
-                              name            basename, excluding the extension
-                              drive           drive
-                              dirpathnodrive  full folder path, without the drive
-                              fullpath        full path
+                              :dirpath         full folder path
+                              :basename        full basename including extension
+                              :ext             file extension (including the '.')
+                              :name            basename, excluding the extension
+                              :drive           drive
+                              :dirpathnodrive  full folder path, without the drive
+                              :fullpath        full path
 
                               eg:
 

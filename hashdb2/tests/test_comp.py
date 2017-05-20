@@ -161,7 +161,7 @@ class TestComp(TestCase):
         self.assertEqual(
             self._execute_comp_lhs_rhs(['{LHSGROUP}', '{RHSGROUP}']),
             [
-                ['/lhs/a0-file-no-extension,/lhs/a-folder/a0-file', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
+                ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension', '/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
                 ['/lhs/a0-file-with.extension', '/rhs/a0-file-with.extension'],
                 ['/lhs/a1-file-with--64k-content', '/rhs/a1-file-with--64k-content'],
                 ['/lhs/a2-file-with-128k-content', '/rhs/a2-file-with-128k-content'],
@@ -256,7 +256,7 @@ class TestComp(TestCase):
         self.assertEqual(
             self._execute_comp_all(['{DUPEGROUP}']),
             [
-                ['/lhs/a0-file-no-extension,/lhs/a-folder/a0-file,/rhs/a0-file-no-extension,/rhs/a-folder/a0-file'],
+                ['/lhs/a-folder/a0-file,/lhs/a0-file-no-extension,/rhs/a-folder/a0-file,/rhs/a0-file-no-extension'],
                 ['/lhs/a0-file-with.extension,/rhs/a0-file-with.extension'],
                 ['/lhs/a1-file-with--64k-content,/rhs/a1-file-with--64k-content'],
                 ['/lhs/a2-file-with-128k-content,/rhs/a2-file-with-128k-content'],
