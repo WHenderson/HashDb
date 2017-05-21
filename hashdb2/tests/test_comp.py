@@ -74,7 +74,6 @@ class TestComp(TestCase):
             def capture(result):
                 results.append(result)
 
-
             print('args:', ' '.join(args))
 
             main(['comp', '--lhs-db', dbLhs, '--lhs-path', os.path.join(root, 'lhs'), '--rhs-db', dbRhs, '--rhs-path', os.path.join(root, 'rhs'), '--'] + args, fcapture=capture)

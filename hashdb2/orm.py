@@ -39,8 +39,9 @@ def create_schema(engine, schema='main'):
     return engine
 
 @contextmanager
-def engine_dispose(engine):
+def engine_dispose(engine, dispose=True):
     try:
         yield engine
     finally:
-        engine.dispose()
+        if dispose:
+            engine.dispose()
